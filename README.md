@@ -44,35 +44,55 @@
 
 ```
 
-
-
 ncuacg/
+├── manage.py                         # 專案啟動點
+├── README.md                         # 說明文件
 
-├── acg\\\_site/         # Django 專案主目錄
+├── ncuacg/                           # 主設定目錄（與專案同名）
+│   ├── __init__.py
+│   ├── settings.py                   # 設定檔（可再拆為 base/dev/prod）
+│   ├── urls.py                       # 主路由（整合各 app）
+│   ├── wsgi.py
+│   └── asgi.py
 
-│   ├── settings.py   # 設定檔
+├── accounts/                         # 登入 / 使用者模組
+│   ├── views.py
+│   ├── models.py
+│   ├── urls.py
+│   └── templates/accounts/
 
-│   ├── urls.py       # 主路由
+├── home/                             # 首頁 + 共用導覽
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/home/home.html
 
+├── club/                             # 社課介紹模組
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/club/club_home.html
+
+├── event/                            # 活動資訊模組
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/event/event_home.html
+
+├── templates/                        # 共用模板（navbar, base...）
+│   ├── base.html
+│   └── includes/
+│       └── navbar.html
+
+├── static/                           # 靜態資源
+│   ├── css/
+│   ├── js/
+│   └── img/
+
+├── backend_api/                      # 若使用 DRF：REST API 模組（預留）
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
 │   └── ...
 
-├── home/             # 首頁與導覽元件
-
-├── club/             # 社課介紹 app
-
-├── event/            # 活動資訊 app
-
-├── accounts/         # 登入 / 個人頁面 app
-
-├── backend\\\_api/      # RESTful API 後端（待建構）
-
-├── templates/        # HTML 模板（含 base、navbar 等）
-
-├── static/           # 靜態檔案（CSS / JS / image）
-
-└── README.md         # 本文件
-
-
+└── .gitignore                        # Git 忽略檔案（已整理）
 
 ````
 
