@@ -1,0 +1,62 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+*.log
+
+# === Django ===
+db.sqlite3
+.env
+*.env
+local_settings.py
+media/
+staticfiles/
+
+# === Virtualenv ===
+venv/
+ENV/
+env/
+.venv/
+pip-log.txt
+
+# === VSCode / Editor Settings ===
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# === Node / Frontend Tooling (if any) ===
+node_modules/
+dist/
+build/
+npm-debug.log
+yarn-error.log
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+
+# === Compiled static assets ===
+*.map
+*.min.js
+*.min.css
+
+# === Coverage / Test ===
+htmlcov/
+coverage.xml
+.pytest_cache/
+
+# === Git ===
+*.orig
+*.swp
+*.swo
+
+# === Mac/Linux Executables ===
+*.out
+*.so
+*.exe
