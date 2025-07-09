@@ -60,3 +60,9 @@ coverage.xml
 *.out
 *.so
 *.exe
+# React
+frontend/node_modules/
+frontend/build/
+
+# VSCode or other IDEs
+.vscode/
