@@ -66,3 +66,7 @@ frontend/build/
 
 # VSCode or other IDEs
 .vscode/
+
+#pictures
+.jpg
+.png
