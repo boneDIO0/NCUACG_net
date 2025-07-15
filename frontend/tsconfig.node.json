@@ -23,5 +23,5 @@
     /*Ai叫我加的*/
      "forceConsistentCasingInFileNames": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["src"]
 }
