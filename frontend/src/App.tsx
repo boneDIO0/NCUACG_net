@@ -1,7 +1,10 @@
 /*這裡都是寫頁面*/ 
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-//import Login from './pages/Login';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgetPwd from './pages/ForgetPwd';
+import Announcement from './pages/Announcement';
 //import Notice from './pages/Notice';
 
 export default function App() {
@@ -14,9 +17,12 @@ export default function App() {
       */}
       <main style={{ flex: 1, padding: '20px' }}>
         <Routes>
+          {/*Route之後需要加密 */}
           <Route path="/" element={<Home />} />
-          {/*<Route path="/login" element={<Login />} />*/}
-          {/*<Route path="/notice" element={<Notice />} />*/}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Signup />} />
+          <Route path="/forget-password" element={<ForgetPwd />} />
+          <Route path="/announcement" element={<Announcement />} />
         </Routes>
       </main>
     </div>

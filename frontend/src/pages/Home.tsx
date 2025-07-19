@@ -1,8 +1,10 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; //接後端時把這個刪掉
 
 // 公告欄組件
 const NoticeBoard: React.FC = () => {
+  const navigate = useNavigate();
   const [notices] = useState([
     {
       id: 1,
@@ -228,6 +230,7 @@ const NoticeBoard: React.FC = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/announcement')}
           style={{
             padding: '6px 12px',
             backgroundColor: '#007bff',
@@ -245,6 +248,32 @@ const NoticeBoard: React.FC = () => {
   );
 };
 const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  // 根據按鈕文字導航
+  const navigate = useNavigate();
+  const handleClick = (item: string) => {
+  
+    switch (item) {
+      /*
+      case '首頁':
+        window.location.href = '/';
+        break;
+      case '關於':
+        window.location.href = '/about';
+        break;
+      case '服務':
+        window.location.href = '/services';
+        break;
+      case '聯絡':
+        window.location.href = '/contact';
+        break;
+        */
+      case '登入':
+        navigate('/Login');
+        break;
+      default:
+        break;
+    }
+  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -328,10 +357,10 @@ const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, o
                   快速導航
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['首頁', '關於', '服務', '聯絡'].map((item, index) => (
+                  {['首頁', '關於', '服務', '聯絡','登入'].map((item, index) => (
                     <motion.button
                       key={item}
-                     // onClick={() => handleClick(item)}  // 👈 加這一行
+                      onClick={() => handleClick(item)}  // 👈 加這一行
                       whileHover={{ scale: 1.05, backgroundColor: '#f0f8ff' }}
                       whileTap={{ scale: 0.95 }}
                       style={{
