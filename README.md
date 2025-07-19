@@ -118,6 +118,12 @@ source venv/bin/activate  # Windows 請使用 venv\\Scripts\\activate
 
 pip install -r requirements.txt
 
+```
+前端依賴安裝：
+npm i vite // 安裝vite 因為
+
+npm run dev
+
 ````
 
 
