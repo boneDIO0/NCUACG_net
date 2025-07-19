@@ -1,26 +1,30 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+/*這裡都是寫頁面*/ 
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgetPwd from './pages/ForgetPwd';
+import Announcement from './pages/Announcement';
+//import Notice from './pages/Notice';
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+     { /*
+      <aside style={{ width: '200px', padding: '20px', background: '#f9f9f9' }}>
+        <QuickNav />
+      </aside>
+      */}
+      <main style={{ flex: 1, padding: '20px' }}>
+        <Routes>
+          {/*Route之後需要加密 */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Signup />} />
+          <Route path="/forget-password" element={<ForgetPwd />} />
+          <Route path="/announcement" element={<Announcement />} />
+        </Routes>
+      </main>
     </div>
   );
 }
-
-export default App;
