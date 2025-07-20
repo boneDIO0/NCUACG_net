@@ -1,6 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import * as Dialog from '@radix-ui/react-dialog';
+
 const NoticeBoard: React.FC = () => {
+  const navigate =useNavigate();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [notices] = useState([
     {
       id: 1,
@@ -133,60 +138,25 @@ const NoticeBoard: React.FC = () => {
         paddingRight: '10px'
       }}>
         {notices.map((notice, index) => (
-          <motion.div
-            key={notice.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02 }}
-            style={getNoticeStyle(notice.type)}
-          >
-            {/* 優先級指示器 */}
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '4px',
-              height: '100%',
-              backgroundColor: getCategoryColor(notice.category)
-            }} />
-
-            {/* 公告標題 */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '8px'
-            }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}>
-                {notice.title}
-              </h3>
-              <span style={{
-                fontSize: '12px',
-                opacity: 0.7,
-                backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                padding: '2px 8px',
-                borderRadius: '10px'
-              }}>
-                {notice.date}
-              </span>
-            </div>
-
-            {/* 公告內容 */}
-            <p style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              opacity: 0.9
-            }}>
-              {notice.content}
-            </p>
-
-            {/* 優先級標籤 */}
+  <Dialog.Root key={notice.id}>
+    <Dialog.Trigger asChild>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        whileHover={{ scale: 1.02 }}
+        style={getNoticeStyle(notice.type)}
+      >
+        {/* 標題與簡要內容 */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: getCategoryColor(notice.category) }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{notice.title}</h3>
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>{notice.date}</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '14px', opacity: 0.9, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {notice.content}
+        </p>
+         {/* 公告分類標籤 */}
             <div style={{
               position: 'absolute',
               top: '10px',
@@ -201,8 +171,66 @@ const NoticeBoard: React.FC = () => {
             }}>
               {notice.category}
             </div>
-          </motion.div>
-        ))}
+      </motion.div>
+    </Dialog.Trigger>
+
+    {/* Modal Content */}
+    <Dialog.Portal>
+      <Dialog.Overlay style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        position: 'fixed',
+        inset: 0
+      }} />
+      <Dialog.Content style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '30px',
+        width: '90%',
+        maxWidth: '500px',
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+      }}>
+        {/* 公告分類標籤 */}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              backgroundColor: getCategoryColor(notice.category),
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase'
+            }}>
+              {notice.category}
+            </div>
+        <Dialog.Title style={{ fontSize: '20px', fontWeight: 'bold' }}>{notice.title}</Dialog.Title>
+        <Dialog.Description style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>
+          {notice.date}
+        </Dialog.Description>
+        <p style={{ fontSize: '16px', lineHeight: '1.6' }}>{notice.content}</p>
+        <Dialog.Close asChild>
+          <button style={{
+            marginTop: '20px',
+            padding: '6px 12px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}>關閉</button>
+        </Dialog.Close>
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>
+))}
+
+
       </div>
 
       {/* 底部操作區 */}
@@ -226,6 +254,7 @@ const NoticeBoard: React.FC = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={()=>navigate("/")}
           style={{
             padding: '6px 12px',
             backgroundColor: '#007bff',
@@ -236,7 +265,7 @@ const NoticeBoard: React.FC = () => {
             cursor: 'pointer'
           }}
         >
-          查看全部
+          回首頁
         </motion.button>
       </div>
     </div>

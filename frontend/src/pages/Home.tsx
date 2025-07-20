@@ -357,7 +357,7 @@ const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, o
                   快速導航
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['首頁', '關於', '服務', '聯絡','登入'].map((item, index) => (
+                  {['首頁', '關於', '服務', '歌謠祭平台','登入'].map((item, index) => (
                     <motion.button
                       key={item}
                       onClick={() => handleClick(item)}  // 👈 加這一行
@@ -380,7 +380,6 @@ const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, o
                   ))}
                 </div>
               </div>
-
               {/* 設置區域 */}
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{ color: '#555', marginBottom: '15px', fontSize: '18px' }}>
