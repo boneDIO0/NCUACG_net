@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
+import Sidebar from '../components/Sidebar';
 
 const NoticeBoard: React.FC = () => {
   const navigate =useNavigate();
@@ -77,11 +78,17 @@ const NoticeBoard: React.FC = () => {
       case 'anime_club': return '#f39c12';
       case 'otage': return '#27ae60';
       case 'trpg': return '#45ff13';
+      case 'editing': return '#1fefe1'
+      case 'voice_acting':return '#ff3121'
+      case 'anime_playing':return '#9e332a'
+      case 'art': return '#334455'
+      case 'figure': return '#aabbcc'
       default: return '#95a5a6';
     }
   };
 
   return (
+    
     <div style={{
       width: '100%',
       maxWidth: '600px',
@@ -230,9 +237,8 @@ const NoticeBoard: React.FC = () => {
   </Dialog.Root>
 ))}
 
-
       </div>
-
+ 
       {/* 底部操作區 */}
       <div style={{
         position: 'absolute',
@@ -269,6 +275,7 @@ const NoticeBoard: React.FC = () => {
         </motion.button>
       </div>
     </div>
+   
   );
  
 };
