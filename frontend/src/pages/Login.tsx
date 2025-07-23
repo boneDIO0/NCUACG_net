@@ -1,24 +1,41 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuth } from '../contexts/AuthContext';
+import Sidebar from '../components/Sidebar';
 export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const {login} = useAuth();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
     // 🔒 這裡先模擬驗證，未來可改成呼叫 Django API
     if (username === 'admin' && password === 'password') {
-      navigate('/'); // 登入成功導向首頁
-    } else {
+      login({
+      id: 1,
+      username: 'Shinya',
+      role: 'admin'
+    });
+      navigate('/');
+    }
+    else if (username==='member' && password==='********'){
+      login({
+      id: 2,
+      username: 'das war ein befehl',
+      role: 'member'
+      });
+        navigate('/');
+    } 
+    else {
       setError('帳號或密碼錯誤');
     }
   };
 
   return (
+    
     <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>登入</h2>
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -64,6 +81,7 @@ export default function Login() {
     <p>其他登入方式</p>
     <button >portal 登入</button>
         </div>
+        <Sidebar />
     </div>
   );
 }

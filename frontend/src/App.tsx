@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgetPwd from './pages/ForgetPwd';
 import Announcement from './pages/Announcement';
+import { AuthProvider } from './contexts/AuthContext';
 //import Notice from './pages/Notice';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
       </aside>
       */}
       <main style={{ flex: 1, padding: '20px' }}>
+        <AuthProvider>
         <Routes>
           {/*Route之後需要加密 */}
           <Route path="/" element={<Home />} />
@@ -24,6 +26,7 @@ export default function App() {
           <Route path="/forget-password" element={<ForgetPwd />} />
           <Route path="/announcement" element={<Announcement />} />
         </Routes>
+        </AuthProvider>
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import Sidebar from '../components/Sidebar';
 export default function Signup() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -68,6 +68,7 @@ export default function Signup() {
           註冊
         </button>
       </form>
+      <Sidebar/>
     </div>
   );
 }
