@@ -17,10 +17,19 @@ export default function Login() {
       login({
       id: 1,
       username: 'Shinya',
-      role: 'member'
+      role: 'admin'
     });
-      navigate('/'); // 登入成功導向首頁
-    } else {
+      navigate('/');
+    }
+    else if (username==='member' && password==='********'){
+      login({
+      id: 2,
+      username: 'das war ein befehl',
+      role: 'member'
+      });
+        navigate('/');
+    } 
+    else {
       setError('帳號或密碼錯誤');
     }
   };

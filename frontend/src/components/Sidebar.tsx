@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
     }
     setIsOpen(false); // ← 點完選單自動關閉 Sidebar
   };
-   const handleClose = () => setIsOpen(false);
+  const handleClose = () => setIsOpen(false);
   const handleOpen = () => setIsOpen(true);
   return (
     
