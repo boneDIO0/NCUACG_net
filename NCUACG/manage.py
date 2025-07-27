@@ -3,6 +3,10 @@
 import os
 import sys
 
+# ─── ① 新增：載入 .env ──────────────────────────────────────────
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())          # 在任何 settings / service import 之前
+# ──────────────────────────────────────────────────────────────
 
 def main():
     """Run administrative tasks."""
