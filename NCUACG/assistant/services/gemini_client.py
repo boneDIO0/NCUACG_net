@@ -3,16 +3,14 @@ assistant/services/gemini_client.py
 ----------------------------------
 集中管理 Google Gemini Chat 與 Embedding 兩種呼叫。
 
-• ask_gemini(prompt, context)  → 取得回覆文字
-• embed_text(text)             → 取得 768 維向量 (list[float])
-
-後續 Retrieval / RAG 可 import 這兩個函式。
+• embed_text(text)          → 取得 768 維向量 (list[float])
+• ask_gemini(prompt)        → 自動檢索 → 組 Prompt → 回覆文字
 """
 from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import google.generativeai as genai
 from dotenv import load_dotenv, find_dotenv
@@ -20,9 +18,9 @@ from dotenv import load_dotenv, find_dotenv
 # ─── 讀取 .env ────────────────────────────────────────────────────────────
 load_dotenv(find_dotenv())
 
-API_KEY           = os.getenv("GEMINI_API_KEY")
-CHAT_MODEL_NAME   = os.getenv("GEMINI_MODEL", "gemini-pro")
-EMBED_MODEL_NAME  = "models/embedding-001"              # 固定名稱
+API_KEY          = os.getenv("GEMINI_API_KEY")
+CHAT_MODEL_NAME  = os.getenv("GEMINI_MODEL", "gemini-pro")
+EMBED_MODEL_NAME = "models/embedding-001"           # 官方固定名稱
 
 if not API_KEY:
     raise RuntimeError("環境變數 GEMINI_API_KEY 未設定，請檢查 .env 或雲端 Secrets")
@@ -30,19 +28,19 @@ if not API_KEY:
 # ─── 初始化 Gemini SDK ────────────────────────────────────────────────────
 genai.configure(api_key=API_KEY)
 
-# Chat 與 Embedding 分開取得
-_chat_model  = genai.GenerativeModel(CHAT_MODEL_NAME)
-# embed_content 建議直接用函式呼叫，或 get_model 也行：
-# _embed_model = genai.get_model(EMBED_MODEL_NAME)
+_chat_model = genai.GenerativeModel(CHAT_MODEL_NAME)
 
+# ─── 內部：向量檢索 ─────────────────────────────────────────────────────────
+# topk() 放在 retriever.py，避免循環 import
+from assistant.services.retriever import topk   # noqa: E402  pylint: disable=wrong-import-position
 
 # ╭─────────────────────────────────────────────────────────────╮
-# │                Public helper functions                      │
+# │               public helper functions                       │
 # ╰─────────────────────────────────────────────────────────────╯
 def embed_text(text: str) -> List[float]:
     """
-    取得指定文字的向量表示 (list[float]，長度 768)。
-    用於向量檢索 / RAG。
+    取得文字的向量 (list[float]，長度 768)。
+    用於向量檢索 / 離線嵌入腳本。
     """
     result = genai.embed_content(
         model=EMBED_MODEL_NAME,
@@ -52,29 +50,21 @@ def embed_text(text: str) -> List[float]:
     return result["embedding"]
 
 
-def ask_gemini(prompt: str, context: Optional[str] = None) -> str:
+def ask_gemini(prompt: str) -> str:
     """
-    一般聊天：可附加 RAG context。
-    • prompt   = 使用者輸入
-    • context  = 預先檢索的文件段落 (可為 None)
-
-    回傳 Gemini 生成的文字（已 strip）。
+    1. 先用 `topk()` 依 prompt 檢索站內段落
+    2. 組成 System Prompt + 使用者 Prompt
+    3. 呼叫 Gemini 回覆
     """
-    messages = []
-    # ① 若有檢索脈絡，先加 system prompt
-    if context:
-        messages.append(
-            {
-                "role": "system",
-                "content": (
-                    "以下是網站文件參考片段，請根據它們回答使用者問題，"
-                    "若片段不足以回答，請簡短說明無相關資料：\n---\n"
-                    f"{context}\n---"
-                ),
-            }
-        )
-    # ② 真正的使用者提問
-    messages.append({"role": "user", "content": prompt})
+    context = topk(prompt, k=4)  # ← 字串，已 join "---"
 
-    response = _chat_model.generate_content(messages)
-    return response.text.strip()
+    system_prompt = (
+        "你是國立中央大學動畫社網站的 AI 助理，"
+        "下面是與問題相關的公告片段，若片段不足請直接回答「查無資料」：\n"
+        f"{context}"
+    )
+
+    response = _chat_model.generate_content([system_prompt, prompt])
+
+    # SDK v0.3+: text 位於 candidates[0].content.parts[0].text
+    return response.candidates[0].content.parts[0].text.strip()
