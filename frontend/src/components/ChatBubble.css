@@ -1,0 +1,4 @@
+.bubble { max-width: 70%; margin: .25rem 0; padding:.6rem .9rem;
+          border-radius: 12px; line-height:1.4 }
+.bubble.user      { background:#4f8cff; color:#fff; margin-left:auto }
+.bubble.assistant { background:#f1f1f1; color:#333; margin-right:auto }
