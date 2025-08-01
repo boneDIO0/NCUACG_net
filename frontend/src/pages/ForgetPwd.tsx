@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 export default function ForgetPwd() {
   const [useremail, setUsername] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -91,6 +92,8 @@ export default function ForgetPwd() {
         {verify_error && <div style={{ color: 'red', fontSize: '14px' }}>{verify_error}</div>}
         {verified && <div style={{ color: 'green', fontSize: '14px' }}>驗證成功！</div>}
       </form>
+      <Sidebar/>
     </div>
+    
   );
 }
