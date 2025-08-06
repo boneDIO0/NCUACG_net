@@ -17,8 +17,11 @@ Including another URLconf
 # NCUACG/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from accounts.views import login_api_view, logout_api_view
 
 urlpatterns = [
+    path("api/login/", login_api_view, name="api-login"),
+    path("api/logout/", logout_api_view, name="api-logout"),
     path("admin/", admin.site.urls),
     # ★ 把 assistant 掛到 /api/assistant/ 之下
     path("api/assistant/", include("assistant.urls")),
