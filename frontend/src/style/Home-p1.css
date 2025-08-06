@@ -1,0 +1,178 @@
+/* 第二頁設定 */
+.page-1 {
+  background-color: #F4F0EB;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 800;
+  font-size: 10rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 背景藍色大方塊 */
+.p1-blue-box-big { /* 背景藍色大方塊本體 */
+  position: absolute;
+  top: -125px;
+  left: -400px;
+  width: 1000px;
+  height: 1000px;
+  background-color: #007bff;
+  border-radius: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+  }
+
+/* 藍色大方塊外框 */
+  .p1-blue-box-big-border {
+  position: absolute;
+  top: -135px;
+  left: -420px;
+  width: 1000px;
+  height: 1000px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 10%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+  }
+
+/* 背景藍色小方塊-0 */
+.p1-blue-box-small-0 { /* 背景藍色小方塊本體-0 */
+  position: absolute;
+  top: 60px;
+  left: 580px;
+  width: 56px;
+  height: 56px;
+  background-color: #007bff;
+  border-radius: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+  }
+
+/* 藍色小方塊外框-0 */
+  .p1-blue-box-small-border-0 {
+  position: absolute;
+  top: 55px;
+  left: 575px;
+  width: 50px;
+  height: 50px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 10%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+  }
+
+/* 背景藍色小方塊-1 */
+.p1-blue-box-small-1 { /* 背景藍色小方塊本體-1 */
+  position: absolute;
+  top: 160px;
+  left: 680px;
+  width: 46px;
+  height: 46px;
+  background-color: #007bff;
+  border-radius: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+}
+
+/* 藍色小方塊外框-1 */
+.p1-blue-box-small-border-1 {
+  position: absolute;
+  top: 155px;
+  left: 675px;
+  width: 40px;
+  height: 40px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 10%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+}
+
+/* 背景藍色小方塊-2 */
+.p1-blue-box-small-2 { /* 背景藍色小方塊本體-2 */
+  position: absolute;
+  top: 30px;
+  left: 706px;
+  width: 78px;
+  height: 78px;
+  background-color: #007bff;
+  border-radius: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+}
+
+/* 藍色小方塊外框-2 */
+.p1-blue-box-small-border-2 {
+  position: absolute;
+  top: 23px;
+  left: 703px;
+  width: 70px;
+  height: 70px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 10%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+}
+
+/* 「最新公告」文字描邊效果 */
+  /* 包住「最新公告」的外框及填充 */
+  .p1-outlined-text {
+  position: relative;
+  top: 0px;
+  left: -120px;
+  display: inline-block;
+  font-size: 10rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+  /* 「最新公告」黑色字體外框 */
+  .p1-text-border {
+   position: absolute;
+   top: 0;
+   left: -50px;
+   color: transparent;
+   -webkit-text-stroke: 10px #000000;
+   white-space: nowrap;
+   z-index: 10;
+  }
+  /* 「最新公告」白色字體填充 */
+  .p1-text-fill {
+   position: relative;
+   top: 0;
+   left: -50px;
+   color: #FFFFFF;
+   white-space: nowrap;
+   z-index: 11;
+  }
+
+/* 公告欄樣式要去NoticeBoard.css */

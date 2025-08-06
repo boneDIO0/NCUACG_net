@@ -1,0 +1,177 @@
+/* 公告欄容器 */
+.notice-board-container {
+  position: relative;
+  width: 550px;
+  margin: 0 auto;
+  padding-top: 40px;
+  padding-bottom: 60px;
+}
+
+/* 疊卡背景 */
+/* 底部卡片 */
+.notice-stack-back {
+  position: absolute;
+  top: 0px;
+  left: 140px;
+  height: 550px;
+  width: 360px;
+  border-radius: 12px;
+  background: #EFE7DC;
+  border: 2px solid #333;
+  z-index: 1;
+  transform: rotate(6deg);
+}
+
+/* 中間卡片 */
+.notice-stack-middle {
+  position: absolute;
+  top: 0px;
+  left: 140px;
+  height: 550px;
+  width: 360px;
+  border-radius: 12px;
+  background: #EFE7DC;
+  border: 2px solid #333;
+  z-index: 2;
+  transform: rotate(3deg);
+}
+
+/* 主要卡片 */
+/* 主要卡片容器 */
+.notice-card-wrapper {
+  position: relative;
+  top: -50px;
+  left: 100px;
+  height: 520px;
+  z-index: 2;
+}
+
+/* 主要卡片樣式 */
+.notice-card {
+  background: #EFE7DC;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 20px;
+  height: 510px;
+  width: 340px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  transition: z-index 0.3s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+}
+
+/* 公告標題 */
+.notice-title {
+  height: 50px;
+  width: 300px;
+  background: #f9c26c;
+  border: 3px solid #000000;
+  font-weight: bold;
+  font-size: 30px;
+  color: #000000;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  align-self: center;
+}
+
+/* 公告內容 */
+.notice-content {
+  font-size: 16px;
+  color: #000000;
+  line-height: 24px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+
+/* 公告內容折疊後的樣式 */
+.notice-content.collapsed {
+  max-height: 144px; /* 6 行高度 */
+}
+
+/* 公告內容展開後的樣式 */
+.notice-content.expanded {
+  max-height: 2000px; /* 任意大值即可 */
+}
+
+/* read more/收起的按鈕樣式 */
+.notice-more {
+  font-size: 12px;
+  font-style: italic;
+  color: #007bff;
+  cursor: pointer;
+  margin-top: 6px;
+  user-select: none;
+}
+
+/* 公告日期 */
+.notice-date {
+  font-size: 12px;
+  text-align: right;
+  margin-top: 12px;
+  color: #555555;
+}
+
+/* 公告導航按鈕容器 */
+.notice-nav {
+  position: absolute;
+  bottom: 120px;
+  left: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+/* 公告導航按鈕 */
+.nav-button {
+  background: #EFE7DC;
+  color:#000000;
+  border: 2px solid #000000;
+  border-radius: 50%;
+  margin: 0 100px;
+  width: 55px;
+  height: 55px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+/* 公告導航按鈕隱藏狀態 */
+.nav-button.hidden {
+  visibility: hidden;
+}
+
+/* 公告導航圓點容器 */
+.notice-nav-dots-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 8px;
+}
+
+/* 公告導航圓點 */
+.notice-nav-dots {
+  width: 10px;
+  height: 10px;
+  background-color: #D9D9D9;
+  border: 3px solid #000000;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+/* 當前公告變成長條圓形 */
+.notice-nav-dots.active {
+  width: 100px;
+  border-radius: 15px;
+  background-color: #D9D9D9;
+  border: 3px solid #000000;
+}
+

@@ -1,0 +1,46 @@
+/* 頁面導航圓點容器 */
+.page-nav-dots-container {
+  position: fixed;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 每個頁面導航圓點 */
+.page-nav-dots {
+  width: 10px;
+  height: 35px;
+  border-radius: 50%;
+  border: 3px solid #000000;
+  background-color: #D9D9D9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* 當前頁面變成長條圓形 */
+.page-nav-dots.active {
+  width: 10px;
+  height: 200px;
+  border-radius: 999px; /* 使其變成長條圓形 */
+  border: 3px solid #000000;
+  background-color: #D9D9D9;
+  }
+
+/* 頁面導航提示 */
+.navigation-hint {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  opacity: 0.6;
+  color: #333333;
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+

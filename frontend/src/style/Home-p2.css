@@ -1,0 +1,143 @@
+/* 第三頁設定 */
+.page-2 {
+  background-color: #F4F0EB;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 800;
+  font-size: 10rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 背景綠色大圓形 */
+.p2-green-circle-big { /* 背景綠色大圓形本體 */
+  position: absolute;
+  top: -125px;
+  left: -240px;
+  width: 1000px;
+  height: 1000px;
+  background-color: #22DD38;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+  }
+
+/* 綠色大圓形外框 */
+  .p2-green-circle-big-border {
+  position: absolute;
+  top: -135px;
+  left: -250px;
+  width: 1000px;
+  height: 1000px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 50%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+  }
+
+/* 背景綠色小圓形-0 */
+.p2-green-circle-small-0 { /* 背景綠色小圓形本體-0 */
+  position: absolute;
+  top: 35px;
+  left: 860px;
+  width: 76px;
+  height: 76px;
+  background-color: #22DD38;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+  }
+
+/* 綠色小圓形外框-0 */
+  .p2-green-circle-small-border-0 {
+  position: absolute;
+  top: 30px;
+  left: 855px;
+  width: 70px;
+  height: 70px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 50%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+  }
+
+/* 背景綠色小圓形-1 */
+.p2-green-circle-small-1 { /* 背景綠色小圓形本體-1 */
+  position: absolute;
+  top: 140px;
+  left: 770px;
+  width: 46px;
+  height: 46px;
+  background-color: #22DD38;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(45deg);
+  overflow: hidden;
+}
+
+/* 綠色小圓形外框-1 */
+.p2-green-circle-small-border-1 {
+  position: absolute;
+  top: 135px;
+  left: 765px;
+  width: 40px;
+  height: 40px;
+  background-color: #00000000; /* 透明背景 */
+  border: 10px solid #000000;
+  border-radius: 50%;
+  opacity: 1.0;
+  z-index: 1;
+  transform: rotate(45deg);
+}
+
+/* 「關於社團」文字描邊效果 */
+  /* 包住「關於社團」的外框及填充 */
+  .p2-outlined-text {
+  position: relative;
+  top: 50px;
+  left: -400px;
+  display: inline-block;
+  font-size: 10rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+  /* 「關於社團」黑色字體外框 */
+  .p2-text-border {
+   position: absolute;
+   top: 0;
+   left: -50px;
+   color: transparent;
+   -webkit-text-stroke: 10px #000000;
+   white-space: nowrap;
+   z-index: 10;
+  }
+  /* 「關於社團」白色字體填充 */
+  .p2-text-fill {
+   position: relative;
+   top: 0;
+   left: -50px;
+   color: #FFFFFF;
+   white-space: nowrap;
+   z-index: 11;
+  }

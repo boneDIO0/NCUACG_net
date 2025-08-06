@@ -1,6 +1,6 @@
 /* 這裡都是寫頁面 */
 import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+import Start from './Start.tsx';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgetPwd from './pages/ForgetPwd';
@@ -24,7 +24,7 @@ export default function App() {
         <AuthProvider>
           <Routes>
             {/* Route 之後需要加密 */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Start />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Signup />} />
             <Route path="/forget-password" element={<ForgetPwd />} />
