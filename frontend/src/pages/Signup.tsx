@@ -1,24 +1,39 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import axios from 'axios';
 export default function Signup() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [useremail, setUserEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [repassword, setrePassword] = useState('');
   const [error, setError] = useState('');
-
-  //大概這邊要處理註冊
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 🔒 這邊要接Django
-    if (username === 'admin' && password === 'password') {
-      navigate('/'); // 登入成功導向首頁
-    } else {
-      setError('帳號或密碼錯誤');
+  const [message, setMessage] = useState('');
+   //大概這邊要處理註冊
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!username || !useremail || !password || !repassword) {
+      setError('請填寫所有欄位');
+      return;
     }
-  };
+    if (password !== repassword) {
+      setError('密碼不一致');
+      return;
+    }
+    try {
+      const res = await axios.post('http://localhost:8000/api/register/', {
+        username,
+        useremail,
+        password
+      }, { withCredentials: true })  // 保留 cookies
+      setMessage(res.data.message)
+    } catch (err: any) {
+      setMessage(err.response?.data?.error || '發生錯誤')
+    }
+  }
+
+  
 
   return (
     <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
@@ -48,8 +63,8 @@ export default function Signup() {
         <input
           type="password"
           placeholder="再次輸入密碼"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={repassword}
+          onChange={(e) => setrePassword(e.target.value)}
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         {error && <div style={{ color: 'red', fontSize: '14px' }}>{error}</div>}
@@ -68,6 +83,7 @@ export default function Signup() {
           註冊
         </button>
       </form>
+      <p>{message}</p>
       <Sidebar/>
     </div>
   );
