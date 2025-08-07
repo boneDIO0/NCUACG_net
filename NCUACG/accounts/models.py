@@ -17,3 +17,7 @@ class Credential(models.Model):
 
     def __str__(self):
         return f"{self.username} (user_id={self.user.id})"
+
+
+
+

@@ -34,8 +34,8 @@ export default function Signup() {
         <input
           type="text"
           placeholder="電子郵件"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={useremail}
+          onChange={(e) => setUserEmail(e.target.value)}
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <input
