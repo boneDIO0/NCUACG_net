@@ -10,7 +10,12 @@ export default function Login() {
   const [error, setError] = useState('');
   const {login} = useAuth();
   const [message, setMessage] = useState('')
-const handleLogin = async () => {
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!username || !password){
+      setMessage("你的帳號密碼咧?");
+      return;
+    }
     await axios.post('http://localhost:8000/api/login/', {
         username:username,
         password:password
