@@ -47,6 +47,7 @@ const handleLogin = async (e: React.FormEvent) => {
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         {error && <div style={{ color: 'red', fontSize: '14px' }}>{error}</div>}
+        <p>{message}</p>
         <button
           type="submit"
           style={{
@@ -72,7 +73,6 @@ const handleLogin = async (e: React.FormEvent) => {
 
     <div> {/* 其他登入方式區塊 */}
     <p>其他登入方式</p>
-    <p>{message}</p>
     <button >portal 登入</button>
         </div>
         <Sidebar />
