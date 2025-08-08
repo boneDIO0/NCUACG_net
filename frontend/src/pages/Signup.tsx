@@ -21,16 +21,16 @@ export default function Signup() {
       setError('密碼不一致');
       return;
     }
-    try {
-      const res = await axios.post('http://localhost:8000/api/register/', {
-        username,
-        useremail,
-        password
-      }, { withCredentials: true })  // 保留 cookies
-      setMessage(res.data.message)
-    } catch (err: any) {
-      setMessage(err.response?.data?.error || '發生錯誤')
-    }
+     await axios.post('http://localhost:8000/api/register/', {
+        username:username,
+        useremail:useremail,
+        password:password
+      }, { withCredentials: true }).then(res => {
+        setMessage(res.data.message)
+      })
+      .catch(err => {
+        setMessage(err.response?.data?.message || '發生錯誤')
+    });  // 保留 cookies 
   }
 
   

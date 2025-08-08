@@ -27,4 +27,3 @@ urlpatterns = [
     path("api/assistant/", include("assistant.urls")),
     path('api/register/', register_user, name='register_user'),
 ]
-

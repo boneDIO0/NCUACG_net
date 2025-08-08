@@ -4,7 +4,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import bcrypt
+from django.http import HttpRequest
 from accounts.models import User, Credential
+from django.db import transaction
 
 @csrf_exempt
 def login_api_view(request):
@@ -36,24 +38,27 @@ def register_user(request):
         try:
             data = json.loads(request.body)
             username = data['username']
-            email = data['email']
+            email = data['useremail']
             password = data['password']
 
-            # 加密密碼
+            # ✅ 加密密碼
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-            # 建立使用者記錄
-            user = User.objects.create(username=username, email=email)
-            Credential.objects.create(
-                username=username,
-                password_hashed=hashed.decode('utf-8'),
-                user=user
-            )
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'message': '此 Email 已註冊過'}, status=400)
+            if User.objects.filter(name=username).exists():
+                return JsonResponse({'message': '此名字已被使用'}, status=400)
+            with transaction.atomic():  # 🔐 開啟資料庫交易
+            # ✅ 建立使用者記錄
+                user = User.objects.create(name=username, email=email)
+                Credential.objects.create(
+                    username=username,
+                    password_hash=hashed.decode('utf-8'),
+                    user=user
+                )
 
             return JsonResponse({'message': '註冊成功'}, status=201)
         except Exception as e:
+            print(f"錯誤: {e}")
             return JsonResponse({'message': f'註冊失敗: {str(e)}'}, status=400)
 
     return JsonResponse({'message': '不支援的請求方法'}, status=405)
-
-
