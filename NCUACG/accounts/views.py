@@ -13,10 +13,12 @@ def login_user(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            username = data['username']
+            useremail = data['useremail']
             password = data['password']
 
-            cred = Credential.objects.get(username=username)
+            user = User.objects.filter(email=useremail).first()
+            cred = Credential.objects.filter(user=user).first()
+
             if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
                 # 驗證成功，更新 last_login
                 cred.last_login = timezone.now()

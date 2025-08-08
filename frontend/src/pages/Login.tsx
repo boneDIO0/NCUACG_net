@@ -5,19 +5,19 @@ import Sidebar from '../components/Sidebar';
 import axios from 'axios';
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [useremail, setUseremail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const {login} = useAuth();
   const [message, setMessage] = useState('')
 const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!username || !password){
+  if (!useremail || !password){
       setMessage("你的帳號密碼咧?");
       return;
     }
     await axios.post('http://localhost:8000/api/login/', {
-        username:username,
+        useremail:useremail,
         password:password
       }, { withCredentials: true }).then(res => {
         setMessage(res.data.message)
@@ -35,8 +35,8 @@ const handleLogin = async (e: React.FormEvent) => {
         <input
           type="text"
           placeholder="帳號"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={useremail}
+          onChange={(e) => setUseremail(e.target.value)}
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <input
