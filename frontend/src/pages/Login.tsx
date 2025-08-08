@@ -11,15 +11,15 @@ export default function Login() {
   const {login} = useAuth();
   const [message, setMessage] = useState('')
 const handleLogin = async () => {
-    try {
-      const res = await axios.post('http://localhost:8000/api/login/', {
-        username,
-        password
-      }, { withCredentials: true })  // 保留 cookies
-      setMessage(res.data.message)
-    } catch (err: any) {
-      setMessage(err.response?.data?.error || '發生錯誤')
-    }
+    await axios.post('http://localhost:8000/api/login/', {
+        username:username,
+        password:password
+      }, { withCredentials: true }).then(res => {
+        setMessage(res.data.message)
+      })
+      .catch(err => {
+       setMessage(err.response?.data?.message || '發生錯誤')
+    }); 
   }
 
   return (

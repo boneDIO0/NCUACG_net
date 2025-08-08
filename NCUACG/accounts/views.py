@@ -4,33 +4,36 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import bcrypt
-from django.http import HttpRequest
 from accounts.models import User, Credential
 from django.db import transaction
+from django.utils import timezone
 
 @csrf_exempt
-def login_api_view(request):
-    if request.method == "POST":
+def login_user(request):
+    if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            username = data.get("username")
-            password = data.get("password")
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return JsonResponse({"message": "登入成功", "username": user.username})
+            username = data['username']
+            password = data['password']
+
+            cred = Credential.objects.get(username=username)
+            if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
+                # 驗證成功，更新 last_login
+                cred.last_login = timezone.now()
+                cred.save()
+                return JsonResponse({'message': '登入成功'}, status=200)
             else:
-                return JsonResponse({"error": "帳號或密碼錯誤"}, status=401)
+                return JsonResponse({'message': '密碼錯誤'}, status=401)
+        except Credential.DoesNotExist:
+            return JsonResponse({'message': '帳號不存在'}, status=404)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    return JsonResponse({"error": "只接受 POST"}, status=405)
+            return JsonResponse({'message': f'登入錯誤: {str(e)}'}, status=400)
+    return JsonResponse({'message': '不支援的請求方法'}, status=405)
 
 @csrf_exempt
-def logout_api_view(request):
-    if request.method == "POST":
-        logout(request)
-        return JsonResponse({"message": "已登出"})
-    return JsonResponse({"error": "只接受 POST"}, status=405)
+def logout_user(request):
+    # 若沒 session/token，後端可以不做事
+    return JsonResponse({'message': '登出成功'}, status=200)
 
 @csrf_exempt
 def register_user(request):
