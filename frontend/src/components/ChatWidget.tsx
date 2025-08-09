@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useChatContext } from '../contexts/ChatContext'; // ★ 改用全域 Context
 import AssistantChat from '../pages/AssistantChat'; // 直接重用聊天頁
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
+  const { messages } = useChatContext(); // ★ 與頁面共用同一份 messages
 
   // 基本樣式（固定在右下角）
   const basePanelStyle: CSSProperties = {

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useChat } from '../hooks/useChat';
+import { useChatContext } from '../contexts/ChatContext'; // ★ 改用全域 Context
 import ChatBubble from '../components/ChatBubble';
 import './AssistantChat.css';
 
 export default function AssistantChat() {
-  const { messages, sendMessage, loading } = useChat();
+  const { messages, sendMessage, loading } = useChatContext();
   const [input, setInput] = useState('');
 
   return (
@@ -31,7 +31,7 @@ export default function AssistantChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="輸入訊息..."
         />
-        <button type="submit">送出</button>
+        <button type="submit" disabled={loading}>送出</button>
       </form>
     </section>
   );

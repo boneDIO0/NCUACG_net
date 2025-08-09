@@ -8,6 +8,7 @@ import Announcement from './pages/Announcement';
 
 // 共用 Context
 import { AuthProvider } from './contexts/AuthContext';
+import { ChatProvider } from './contexts/ChatContext';   // ★ 新增
 
 // AI 助理
 import AssistantChat from './pages/AssistantChat';
@@ -16,28 +17,30 @@ import ChatWidget from './components/ChatWidget';
 
 export default function App() {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* <aside style={{ width: 200, padding: 20, background: '#f9f9f9' }}>
-          <QuickNav />
-        </aside> */}
-      <main style={{ flex: 1, padding: '20px' }}>
-        <AuthProvider>
-          <Routes>
-            {/* Route 之後需要加密 */}
-            <Route path="/" element={<Start />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Signup />} />
-            <Route path="/forget-password" element={<ForgetPwd />} />
-            <Route path="/announcement" element={<Announcement />} />
+    <ChatProvider>  {/* ★ 讓 Routes 與 ChatWidget 都在提供者內 */}
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        {/* <aside style={{ width: 200, padding: 20, background: '#f9f9f9' }}>
+            <QuickNav />
+          </aside> */}
+        <main style={{ flex: 1, padding: '20px' }}>
+          <AuthProvider>
+            <Routes>
+              {/* Route 之後需要加密 */}
+              <Route path="/" element={<Start />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Signup />} />
+              <Route path="/forget-password" element={<ForgetPwd />} />
+              <Route path="/announcement" element={<Announcement />} />
 
-            {/* --- AI 助理聊天頁 --- */}
-            <Route path="/assistant" element={<AssistantChat />} />
-          </Routes>
-        </AuthProvider>
-      </main>
+              {/* --- AI 助理聊天頁 --- */}
+              <Route path="/assistant" element={<AssistantChat />} />
+            </Routes>
+          </AuthProvider>
+        </main>
 
-      {/* 全站浮動 AI 助理按鈕 / 面板 */}
-      <ChatWidget />
-    </div>
+        {/* 全站浮動 AI 助理按鈕 / 面板 */}
+        <ChatWidget />
+      </div>
+    </ChatProvider>
   );
 }

@@ -2,3 +2,11 @@
           border-radius: 12px; line-height:1.4 }
 .bubble.user      { background:#4f8cff; color:#fff; margin-left:auto }
 .bubble.assistant { background:#f1f1f1; color:#333; margin-right:auto }
+
+/* 新增：system 訊息（通常用於系統提示 / 模式切換） */
+.bubble.system {
+  background: #fff8d9;       /* 淡黃底 */
+  color: #7a5e00;            /* 深黃字 */
+  margin: .25rem auto;       /* 置中 */
+  border: 1px dashed #e6d28a;
+}
