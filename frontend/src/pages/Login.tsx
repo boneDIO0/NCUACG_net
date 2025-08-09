@@ -2,48 +2,41 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
+import axios from 'axios';
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [useremail, setUseremail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const {login} = useAuth();
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 🔒 這裡先模擬驗證，未來可改成呼叫 Django API
-    if (username === 'admin' && password === 'password') {
-      login({
-      id: 1,
-      username: 'Shinya',
-      role: 'admin'
-    });
-      navigate('/');
+  const [message, setMessage] = useState('')
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!useremail || !password){
+      setMessage("你的帳號密碼咧?");
+      return;
     }
-    else if (username==='member' && password==='********'){
-      login({
-      id: 2,
-      username: 'das war ein befehl',
-      role: 'member'
-      });
-        navigate('/');
-    } 
-    else {
-      setError('帳號或密碼錯誤');
-    }
-  };
+    await axios.post('http://localhost:8000/api/login/', {
+        useremail:useremail,
+        password:password
+      }, { withCredentials: true }).then(res => {
+        setMessage(res.data.message)
+      })
+      .catch(err => {
+       setMessage(err.response?.data?.message || '發生錯誤')
+    }); 
+  }
 
   return (
-    
+
     <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>登入</h2>
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <input
           type="text"
           placeholder="帳號"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={useremail}
+          onChange={(e) => setUseremail(e.target.value)}
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <input
@@ -54,6 +47,7 @@ export default function Login() {
           style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         {error && <div style={{ color: 'red', fontSize: '14px' }}>{error}</div>}
+        <p>{message}</p>
         <button
           type="submit"
           style={{
