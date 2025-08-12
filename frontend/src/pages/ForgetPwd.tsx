@@ -42,7 +42,7 @@ export default function ForgetPwd() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
+    <div className="outercontainer">
       <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>密碼重設</h2>
       <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <input

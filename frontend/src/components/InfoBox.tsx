@@ -1,6 +1,7 @@
 import React from 'react';
-import '../style/InfoBox.css';
+import '../styles/InfoBox.css';
 import aboutInfoRaw from '../data/aboutInfo.json';
+// TODO: 把本地Json改成從資料庫抓公告資料
 
 // 定義 JSON 資料型別（新格式）
 type AboutItem = {

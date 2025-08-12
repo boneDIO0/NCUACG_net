@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import notices from '../data/notices.json';
-import '../style/NoticeBoard.css';
+import '../styles/NoticeBoard.css';
 
 const MAX_LINES = 6;
 const LINE_HEIGHT = 24;

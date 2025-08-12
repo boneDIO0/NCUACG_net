@@ -5,14 +5,17 @@
   margin: 0 auto;
   padding-top: 40px;
   padding-bottom: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* 疊卡背景 */
 /* 底部卡片 */
-/* .notice-stack-back { */
+ .notice-stack-back { 
   position: absolute;
-  top: 0px;
-  left: 140px;
+  top: 10%;
+  left: 53.2%;
   height: 550px;
   width: 360px;
   border-radius: 12px;
@@ -23,10 +26,10 @@
 }
 
 /* 中間卡片 */
-/* .notice-stack-middle { */
+ .notice-stack-middle { 
   position: absolute;
-  top: 0px;
-  left: 140px;
+  top: 10%;
+  left: 51.8%;
   height: 550px;
   width: 360px;
   border-radius: 12px;
@@ -38,7 +41,7 @@
 
 /* 主要卡片 */
 /* 主要卡片容器 */
-/* .notice-card-wrapper { */
+.notice-card-wrapper { 
   position: relative;
   top: -50px;
   left: 100px;
@@ -122,9 +125,9 @@
 /* 公告導航按鈕容器 */
 .notice-nav {
   position: absolute;
-  bottom: 120px;
-  left: 20px;
-  width: 100%;
+  bottom: 25%;
+  left: 47.1%;
+  width: 330px;
   display: flex;
   justify-content: space-between;
   z-index: 5;
@@ -151,9 +154,11 @@
 
 /* 公告導航圓點容器 */
 .notice-nav-dots-container {
+  position: relative;
   display: flex;
   justify-content: center;
   margin-top: 20px;
+  left:65%;
   gap: 8px;
 }
 
