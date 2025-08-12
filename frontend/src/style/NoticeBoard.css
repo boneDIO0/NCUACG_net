@@ -1,4 +1,4 @@
-/* 公告欄容器 */
+公告欄容器
 .notice-board-container {
   position: relative;
   width: 550px;
@@ -9,7 +9,7 @@
 
 /* 疊卡背景 */
 /* 底部卡片 */
-.notice-stack-back {
+/* .notice-stack-back { */
   position: absolute;
   top: 0px;
   left: 140px;
@@ -23,7 +23,7 @@
 }
 
 /* 中間卡片 */
-.notice-stack-middle {
+/* .notice-stack-middle { */
   position: absolute;
   top: 0px;
   left: 140px;
@@ -38,7 +38,7 @@
 
 /* 主要卡片 */
 /* 主要卡片容器 */
-.notice-card-wrapper {
+/* .notice-card-wrapper { */
   position: relative;
   top: -50px;
   left: 100px;

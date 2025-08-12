@@ -96,13 +96,13 @@ const NoticeBoard: React.FC = () => {
           className={`nav-button ${currentIndex === 0 ? 'hidden' : ''}`} /* 當前是第一個公告時隱藏上一頁按鈕 */
           onClick={handlePrev}
         >
-          ←
+          ◀
         </button>
         <button
           className={`nav-button ${currentIndex === notices.length - 1 ? 'hidden' : ''}`} 
           onClick={handleNext}
         >
-          →
+          ▶
         </button>
       </div>
     </div>
