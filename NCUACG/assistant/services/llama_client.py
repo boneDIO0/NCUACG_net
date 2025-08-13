@@ -3,8 +3,8 @@ import os
 from groq import Groq
 from .retriever import retrieve_context  # 會讀 notices.pkl，避免循環引用
 
-MODEL = os.getenv("LLAMA_MODEL", "llama-3.1-70b-versatile")
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+MODEL = os.getenv("LLAMA_MODEL")
+client = Groq()
 
 _SYSTEM = (
     "你是動畫社官網助理。回答要簡潔、先用站內脈絡；"
