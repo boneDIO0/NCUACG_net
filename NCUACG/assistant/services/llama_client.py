@@ -3,7 +3,7 @@ import os
 from groq import Groq
 from .retriever import retrieve_context  # 會讀 notices.pkl，避免循環引用
 
-MODEL = os.getenv("LLAMA_MODEL", "llama-3.1-70b-versatile")
+MODEL = os.getenv("LLAMA_MODEL")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 _SYSTEM = (
