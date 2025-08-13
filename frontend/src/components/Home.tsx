@@ -123,7 +123,6 @@ const Home: React.FC = () => {
           {currentPage === 0 && (
             <>
             <div className="p0-blue-box-border" /> {/* 藍色方塊外框 */}
-            <div className="p0-yellow-triangle-border" /> {/* 黃色三角形外框 */}
             <div className="p0-green-circle-border" /> {/* 綠色圓形外框 */}
             <div className="p0-blue-box">
               <img src="/images/GBC_Nina.jpg" alt="GBC_Nina" className="p0-blue-box-img" />
@@ -158,11 +157,9 @@ const Home: React.FC = () => {
           </motion.div>
           {currentPage === 1 && (
             <>
-            <div className="p1-blue-box-big-border" /> {/* 藍色大方塊外框 */}
             <div className="p1-blue-box-small-border-0" /> {/* 藍色小方塊外框-0 */}
             <div className="p1-blue-box-small-border-1" /> {/* 藍色小方塊外框-1 */}
             <div className="p1-blue-box-small-border-2" /> {/* 藍色小方塊外框-2 */}
-            <div className="p1-blue-box-big" /> {/* 藍色大方塊 */}
             <div className="p1-blue-box-small-0" /> {/* 藍色小方塊-0 */}
             <div className="p1-blue-box-small-1" /> {/* 藍色小方塊-1 */}
             <div className="p1-blue-box-small-2" /> {/* 藍色小方塊-2 */}
@@ -179,10 +176,15 @@ const Home: React.FC = () => {
             animate="animate"
           >
             {/* 「最新公告」標題 */}
-            <h1 className="p1-outlined-text">
-            <span className="p1-text-border">最新公告</span>
-            <span className="p1-text-fill">最新公告</span>
-            </h1>
+            <div className="p1-announcement-wrapper">
+              <div className="p1-blue-box-big" />
+              <div className="p1-blue-box-big-border" /> {/* 藍色大方塊外框 */}
+              <div className="p1-outlined-text">
+              <span className="p1-text-border">最新公告</span>
+              <span className="p1-text-fill">最新公告</span>
+            </div>
+          </div>
+
           </motion.div>
           )}
 

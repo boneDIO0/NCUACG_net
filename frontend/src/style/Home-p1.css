@@ -1,5 +1,6 @@
 /* 第二頁設定 */
 .page-1 {
+  position: relative; /* 供內部元件 absolute 定位參考 */
   background-color: #F4F0EB;
   color: #FFFFFF;
   display: flex;
@@ -7,18 +8,59 @@
   justify-content: center;
   font-family: 'Noto Sans', sans-serif;
   font-weight: 800;
-  font-size: 10rem;
+  font-size: clamp(3rem, 10vw, 10rem); /* 響應式文字大小 */
   font-weight: bold;
   white-space: nowrap;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.p1-announcement-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translateY(-50%);
+}
+
+/* 「最新公告」文字描邊效果 */
+/* 包住「最新公告」的外框及填充 */
+.p1-outlined-text {
+  position: absolute;
+  top: -5vh;
+  left: 18vw;
+  transform: translate(-50%, -50%);
+  display: inline-block;
+  font-size: 8vw;
+  font-weight: bold;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 「最新公告」黑色字體外框 */
+.p1-text-border {
+  position: absolute;
+  color: transparent;
+  -webkit-text-stroke: 0.5vw #000000;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* 「最新公告」白色字體填充 */
+.p1-text-fill {
+  position: relative;
+  color: #FFFFFF;
+  white-space: nowrap;
+  z-index: 11;
 }
 
 /* 背景藍色大方塊 */
 .p1-blue-box-big { /* 背景藍色大方塊本體 */
   position: absolute;
-  top: -125px;
-  left: -400px;
-  width: 1000px;
-  height: 1000px;
+  top: -5vh;
+  left: 0;
+  width: 61vw;
+  height: 61vw;
   background-color: #007bff;
   border-radius: 10%;
   display: flex;
@@ -26,32 +68,32 @@
   align-items: center;
   opacity: 0.6;
   z-index: 0;
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
   overflow: hidden;
-  }
+}
 
 /* 藍色大方塊外框 */
-  .p1-blue-box-big-border {
+.p1-blue-box-big-border {
   position: absolute;
-  top: -135px;
-  left: -420px;
-  width: 1000px;
-  height: 1000px;
+  top: -5vh;
+  left: 0;
+  width: 60vw;
+  height: 60vw;
   background-color: #00000000; /* 透明背景 */
-  border: 10px solid #000000;
+  border: 1vw solid #000000;
   border-radius: 10%;
   opacity: 1.0;
   z-index: 1;
-  transform: rotate(45deg);
-  }
+  transform: translate(-50%, -50%) rotate(45deg);
+}
 
 /* 背景藍色小方塊-0 */
 .p1-blue-box-small-0 { /* 背景藍色小方塊本體-0 */
   position: absolute;
-  top: 60px;
-  left: 580px;
-  width: 56px;
-  height: 56px;
+  top: 10%;
+  left: 30%;
+  width: 3vw;
+  height: 3vw;
   background-color: #007bff;
   border-radius: 10%;
   display: flex;
@@ -59,32 +101,32 @@
   align-items: center;
   opacity: 0.6;
   z-index: 0;
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
   overflow: hidden;
-  }
+}
 
 /* 藍色小方塊外框-0 */
-  .p1-blue-box-small-border-0 {
+.p1-blue-box-small-border-0 {
   position: absolute;
-  top: 55px;
-  left: 575px;
-  width: 50px;
-  height: 50px;
+  top: 10%;
+  left: 30%;
+  width: 2.5vw;
+  height: 2.5vw;
   background-color: #00000000; /* 透明背景 */
-  border: 10px solid #000000;
+  border: 0.8vw solid #000000;
   border-radius: 10%;
   opacity: 1.0;
   z-index: 1;
-  transform: rotate(45deg);
-  }
+  transform: translate(-50%, -50%) rotate(45deg);
+}
 
 /* 背景藍色小方塊-1 */
 .p1-blue-box-small-1 { /* 背景藍色小方塊本體-1 */
   position: absolute;
-  top: 160px;
-  left: 680px;
-  width: 46px;
-  height: 46px;
+  top: 75%;
+  left: 85%;
+  width: 4vw;
+  height: 4vw;
   background-color: #007bff;
   border-radius: 10%;
   display: flex;
@@ -99,12 +141,12 @@
 /* 藍色小方塊外框-1 */
 .p1-blue-box-small-border-1 {
   position: absolute;
-  top: 155px;
-  left: 675px;
-  width: 40px;
-  height: 40px;
+  top: 75%;
+  left: 85%;
+  width: 3.5vw;
+  height: 3.5vw;
   background-color: #00000000; /* 透明背景 */
-  border: 10px solid #000000;
+  border: 0.8vw solid #000000;
   border-radius: 10%;
   opacity: 1.0;
   z-index: 1;
@@ -114,10 +156,10 @@
 /* 背景藍色小方塊-2 */
 .p1-blue-box-small-2 { /* 背景藍色小方塊本體-2 */
   position: absolute;
-  top: 30px;
-  left: 706px;
-  width: 78px;
-  height: 78px;
+  top: 60%;
+  left: 88%;
+  width: 6vw;
+  height: 6vw;
   background-color: #007bff;
   border-radius: 10%;
   display: flex;
@@ -132,47 +174,16 @@
 /* 藍色小方塊外框-2 */
 .p1-blue-box-small-border-2 {
   position: absolute;
-  top: 23px;
-  left: 703px;
-  width: 70px;
-  height: 70px;
+  top: 60%;
+  left: 88%;
+  width: 5.5vw;
+  height: 5.5vw;
   background-color: #00000000; /* 透明背景 */
-  border: 10px solid #000000;
+  border: 0.8vw solid #000000;
   border-radius: 10%;
   opacity: 1.0;
   z-index: 1;
   transform: rotate(45deg);
 }
-
-/* 「最新公告」文字描邊效果 */
-  /* 包住「最新公告」的外框及填充 */
-  .p1-outlined-text {
-  position: relative;
-  top: 0px;
-  left: -120px;
-  display: inline-block;
-  font-size: 10rem;
-  font-weight: bold;
-  line-height: 1.2;
-}
-  /* 「最新公告」黑色字體外框 */
-  .p1-text-border {
-   position: absolute;
-   top: 0;
-   left: -50px;
-   color: transparent;
-   -webkit-text-stroke: 10px #000000;
-   white-space: nowrap;
-   z-index: 10;
-  }
-  /* 「最新公告」白色字體填充 */
-  .p1-text-fill {
-   position: relative;
-   top: 0;
-   left: -50px;
-   color: #FFFFFF;
-   white-space: nowrap;
-   z-index: 11;
-  }
 
 /* 公告欄樣式要去NoticeBoard.css */

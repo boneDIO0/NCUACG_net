@@ -1,5 +1,6 @@
 /* 第一頁設定 */
 .page-0 {
+  position: relative; /* 供內部元件 absolute 定位參考 */
   background-color: #F4F0EB;
   color: #FFFFFF;
   display: flex;
@@ -7,18 +8,50 @@
   justify-content: center;
   font-family: 'Noto Sans', sans-serif;
   font-weight: 800;
-  font-size: 10rem;
+  font-size: clamp(3rem, 10vw, 10rem); /* 響應式文字大小 */
   font-weight: bold;
   white-space: nowrap;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
-  /* 背景藍色方塊 */
-  .p0-blue-box { /* 背景藍色方塊本體 */
-  position: fixed;
-  top: -375px;
-  left: -375px;
-  width: 850px;
-  height: 850px;
+/* 「中央動畫社」文字滑動容器 */
+/* 包住「中央動畫社」的外框及填充 */
+.p0-outlined-text {
+  position: relative;
+  top: 50%;
+  left: 45%;
+  transform: translate(-50%, -50%);  /*從「左上角對齊」調整為「中心點對齊」*/
+  display: inline-block; /*讓文字容器仍保持「inline（內聯元素）」的尺寸行為，但可以設定寬高*/
+  font-size: clamp(3rem, 10vw, 10rem); /*clamp(最小值, 理想值, 最大值)*/
+  font-weight: bold;
+  line-height: 1.2;
+  z-index: 9;
+}
+/* 「中央動畫社」黑色字體外框 */
+.p0-text-border {
+  position: absolute;
+  color: transparent;
+  -webkit-text-stroke: 0.8vw #000000;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* 「中央動畫社」白色字體填充 */
+.p0-text-fill {
+  position: relative;
+  color: #FFFFFF;
+  white-space: nowrap;
+  z-index: 11;
+}
+/* 背景藍色方塊 */
+.p0-blue-box { /* 背景藍色方塊本體 */
+  position: absolute;
+  top: -33.3vw;
+  left: -33.3vw;
+  width: 70vw;
+  height: 70vw;
   background-color: #007bff;
   display: flex;
   justify-content: center;
@@ -27,42 +60,43 @@
   z-index: 1;
   transform: rotate(50deg);
   overflow: hidden;
-  }
-  /* 藍色方塊內部圖片 */
-  .p0-blue-box-img {
-  width: 110%;           
+}
+/* 藍色方塊內部圖片 */
+.p0-blue-box-img {
+  position: absolute;
+  width: 110%;
   height: 110%;
   object-fit: contain;
-  position: absolute;
   transform: rotate(90deg) translateY(-20%);
   opacity: 0.8;
   z-index: 1;
 }
 
-  /* 藍色方塊外框 */
-  .p0-blue-box-border {
-  position: fixed;
-  top: -380px;
-  left: -380px;
-  width: 850px;
-  height: 850px;
+/* 藍色方塊外框 */
+.p0-blue-box-border {
+  position: absolute;
+  top: -34vw;
+  left: -34vw;
+  width: 70vw;
+  height: 70vw;
   background-color: #00000000; /* 透明背景 */
-  border: 5px solid #000000;
+  border: 0.6vw solid #000000;
   border-radius: 0px;
   opacity: 1.0;
-  z-index: 0;
+  z-index: 2;
   transform: rotate(50deg);
-  }
+}
 
-  /* 背景黃色三角形 */
-  .p0-yellow-triangle { /* 背景黃色三角形本體 */
-  position: fixed;
-  top: 150px;
-  left: 625px;
-  width: 300px;
-  height: 259.8px; /* 高度 = 寬度 * √3 / 2 ≈ 300 * 0.866 = 259.8 */
+/* 背景黃色三角形 */
+.p0-yellow-triangle { /* 背景黃色三角形本體 */
+  position: absolute;
+  top: 60vh;
+  left: 40vw;
+  width: 15vw;
+  height: calc(15vw * 0.866); /* 高度 = 寬度 * √3 / 2 */
+  transform: translate(-50%, -50%);
   background-color: #F9AA49;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%); /* 上頂點、左下角、右下角 */
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -70,44 +104,27 @@
   z-index: 1;
   transform: rotate(-20deg);
   overflow: hidden;
-  }
+}
 
-  /* 三角形內部的圖片 */
-  .p0-yellow-triangle-img {
+/* 三角形內部的圖片 */
+.p0-yellow-triangle-img {
   width: 105%;
   height: 105%;
   object-fit: contain;
   transform: scale(1.1) translateY(5%);
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);  /* 上頂點、左下角、右下角 */
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   opacity: 0.8;
   z-index: 1;
-  }
+}
 
-  /* 黃色三角形外框 */
-  .p0-yellow-triangle-border {
-  position: fixed;
-  top: 143px;
-  left: 617px;
-  width: 315px;
-  height: 272.8px;    /* 高度 = 寬度 * √3 / 2 ≈ 315 * 0.866 = 272.8 */
-  background-color: #000000;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%); /* 上頂點、左下角、右下角 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 1.0;
-  z-index: 0;
-  transform: rotate(-20deg);
-  overflow: hidden;
-  }
-
-  /* 背景綠色圓形 */
-  .p0-green-circle { /* 背景綠色圓形本體 */
-  position: fixed;
-  top: 250px;
-  left: 900px;
-  width: 750px;
-  height: 750px;
+/* 背景綠色圓形 */
+.p0-green-circle { /* 背景綠色圓形本體 */
+  position: absolute;
+  top: 90vh;
+  left: 90vw;
+  width: 40vw;
+  height: 40vw;
+  transform: translate(-50%, -50%);
   background-color: #22DD38;
   border-radius: 50%;
   display: flex;
@@ -131,41 +148,15 @@
 
 /* 綠色圓形外框 */
 .p0-green-circle-border {
-  position: fixed;
-  top: 243px;
-  left: 893px;
-  width: 751px;
-  height: 751px;
+  position: absolute;
+  top: 90vh;
+  left: 90vw;
+  width: 40vw;
+  height: 40vw;
+  transform: translate(-50%, -50%);
   background-color: #00000000; /* 透明背景 */
-  border: 7px solid #000000;
+  border: 0.7vw solid #000000;
   border-radius: 50%;
   opacity: 1.0;
   z-index: 0;
 }
-
-  /* 「中央動畫社」文字描邊效果 */
-  /* 包住「中央動畫社」的外框及填充 */
-  .p0-outlined-text {
-  position: relative;
-  top: -50px;
-  left: 0;
-  display: inline-block;
-  font-size: 10rem;
-  font-weight: bold;
-  line-height: 1.2;
-}
-  /* 「中央動畫社」黑色字體外框 */
-  .p0-text-border {
-   position: absolute;
-   color: transparent;
-   -webkit-text-stroke: 10px #000000;
-   white-space: nowrap;
-   z-index: 10;
-  }
-  /* 「中央動畫社」白色字體填充 */
-  .p0-text-fill {
-   position: relative;
-   color: #FFFFFF;
-   white-space: nowrap;
-   z-index: 11;
-  }

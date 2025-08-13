@@ -1,6 +1,6 @@
 /* 這裡都是寫頁面 */
 import { Routes, Route } from 'react-router-dom';
-import Start from './Start.tsx';
+import Start from './Start';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgetPwd from './pages/ForgetPwd';
@@ -8,7 +8,7 @@ import Announcement from './pages/Announcement';
 
 // 共用 Context
 import { AuthProvider } from './contexts/AuthContext';
-import { ChatProvider } from './contexts/ChatContext';   // ★ 新增
+import { ChatProvider } from './contexts/ChatContext';
 
 // AI 助理
 import AssistantChat from './pages/AssistantChat';
@@ -17,7 +17,7 @@ import ChatWidget from './components/ChatWidget';
 
 export default function App() {
   return (
-    <ChatProvider>  {/* ★ 讓 Routes 與 ChatWidget 都在提供者內 */}
+    <ChatProvider> {/* 讓 Routes 與 ChatWidget 都在提供者內 */}
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         {/* <aside style={{ width: 200, padding: 20, background: '#f9f9f9' }}>
             <QuickNav />
@@ -31,7 +31,6 @@ export default function App() {
               <Route path="/register" element={<Signup />} />
               <Route path="/forget-password" element={<ForgetPwd />} />
               <Route path="/announcement" element={<Announcement />} />
-
               {/* --- AI 助理聊天頁 --- */}
               <Route path="/assistant" element={<AssistantChat />} />
             </Routes>
