@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect,useRef} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom'; //接後端時把這個刪掉
 import { useAuth } from '../contexts/AuthContext';
@@ -6,8 +6,32 @@ import '../styles/Sidebar.css';
 const Sidebar: React.FC = () => {
   const { isAuthenticated, user,logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // ← 由自己管理開關狀態
+
   // 根據按鈕文字導航
   const navigate = useNavigate();
+  const [activeMenu, setActive] = useState<string | null>(null);
+  const handleMenuClick = (itemName: string): void => {
+    setActive((prev) => (prev === itemName ? null : itemName));
+  };
+interface Option {
+  name: string;
+  children: string[];
+}
+  const menuOptions:Option[] = [
+  { 
+    name: '歌謠祭平台', 
+    children: ['舊曲清單', '新曲投稿', '亂入投稿說明/投票','歌單瀏覽','點歌系統','管理歌單'] 
+  },
+  { 
+    name: '社課介紹', 
+    children: ['動畫播放組', 'MV剪輯組', '繪畫組','TRPG組','聲優組','御宅藝組','模型製作組'] 
+  },
+  { 
+    name: '活動資訊', 
+    children: ['行事曆', '活動公告一覽'] 
+  }
+];
+
   const handleClick = (item: string) => {
   
     switch (item) {
@@ -28,13 +52,19 @@ const Sidebar: React.FC = () => {
       case '登入':
         navigate('/Login');
         break;
+      case '註冊':
+        navigate('/register');
+        break;
       
       default:
         break;
     }
     setIsOpen(false); // ← 點完選單自動關閉 Sidebar
   };
-  const handleClose = () => setIsOpen(false);
+  const handleClose = () =>
+    { setIsOpen(false)
+      setActive(null)
+    };
   const handleOpen = () => setIsOpen(true);
   return (
     
@@ -77,28 +107,74 @@ const Sidebar: React.FC = () => {
 
             {/* 側邊欄內容 */}
             <div style={{ marginTop: '60px' }}>
-              <h2 className='sidebar-title' >
-                導航菜單
-              </h2>
+              
               
               {/* 子組件區域 */}
               <div style={{ marginBottom: '30px' }}>
-                <h3 className='sidebar-section-title'>
-                  快速導航
-                </h3>
+                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['首頁', '關於', '服務','歌謠祭平台'].map((item, index) => (
+                  {/* --- 新：主按鈕列 + 左側共享面板（往左開新區塊） --- */}
+                    <div className="menu-right-side">
+                      {/* 主按鈕直欄 */}
+                      <div className="menu-main-column">
+                        {menuOptions.map((option) => (
+                          <div key={option.name} className="menu-item-wrapper">
+                            <motion.button
+                              onClick={() => handleMenuClick(option.name)}
+                              whileHover={{ scale: 1.05, backgroundColor: '#f0f8ff' }}
+                              whileTap={{ scale: 0.95 }}
+                              className="option-buttons"
+                              aria-expanded={activeMenu === option.name}
+                            >
+                              {option.name}
+                            </motion.button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* 左側共享子面板（僅渲染一次） */}
+                      <AnimatePresence>
+                        {activeMenu && (
+                          <motion.div
+                            key={activeMenu}
+                            initial={{ x: -40, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -40, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                            className="left-subpanel"
+                          >
+                            {(menuOptions.find(o => o.name === activeMenu)?.children ?? []).map(child => (
+                              <motion.button
+                                key={child}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="sub-option-button"
+                              >
+                                {child}
+                              </motion.button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  {/* 註冊按鈕*/}
+                  {!isAuthenticated ? (
+                  <>
                     <motion.button
-                      key={item}
-                      onClick={() => handleClick(item)}  
-                      whileHover={{ scale: 1.05, backgroundColor: '#f0f8ff' }}
+                      onClick={() =>handleClick("註冊")}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className='option-buttons'
+                      className='signup-button'                      
                     >
-                      {item}
+                      註冊
                     </motion.button>
-                  ))}
-                  
+                    
+                  </>
+                ) : (
+                  <p style={{ fontSize: '14px', color: '#555', marginTop: '10px' }}>
+                      ciallo~(∠・ω&lt; )⌒☆，{user?.username}
+                  </p>
+                )}
                   {/* 額外加登入/登出按鈕 */}
                 {isAuthenticated ? (
                   <>
