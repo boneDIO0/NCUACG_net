@@ -113,6 +113,7 @@ interface Option {
               <div style={{ marginBottom: '30px' }}>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */}
                   {/* --- 新：主按鈕列 + 左側共享面板（往左開新區塊） --- */}
                     <div className="menu-right-side">
                       {/* 主按鈕直欄 */}
@@ -157,6 +158,7 @@ interface Option {
                         )}
                       </AnimatePresence>
                     </div>
+                  {/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */}
                   {/* 註冊按鈕*/}
                   {!isAuthenticated ? (
                   <>
