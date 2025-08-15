@@ -27,7 +27,7 @@
 /* 關閉按鈕 */
 .close-button {
   position: fixed;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   width: 50px;
   height: 50px;
@@ -63,18 +63,7 @@
   font-size: 18px;
 }
 
-/* 選項按鈕 */
-.option-buttons {
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fff;
-  color: #333;
-  cursor: pointer;
-  text-align: left;
-  font-size: 14px;
-  transition: all 0.2s;
-}
+
 
 /* 登入 / 登出按鈕 */
 .login-button {
@@ -179,7 +168,7 @@
 }
 /* 主選項外框 */
 .menu-item-wrapper {
-   margin-top: 0;
+  margin-top: 0;
   margin-bottom: 0;
 }
 
@@ -194,19 +183,64 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+   /* 讓按鈕在容器中平均分配空間 */
+  justify-content: center; /* 讓整個按鈕群組在容器中垂直居中 */
+  /* 或者使用 flex-grow 讓每個按鈕佔據更多空間
+  justify-content: flex-start;
+  */
+  
+  /* 確保容器本身有足夠的高度 */
+  height: 100%; /* 或者一個固定的高度，例如 800px */
 }
-/* 主選項按鈕 */
+/* 選項按鈕 */
 .option-buttons {
-  width: 110px;
-  padding: 8px 12px;
-  background: white;
-  border: 2px solid black;
+  width: 300px; /* 設定你希望的按鈕固定寬度 */
+  height: 200px; /* 設定你希望的按鈕固定高度 */
+  padding-left: 32px;
+  padding: 0;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 14px;
-  text-align: center;
+  border-color: #000;
+  background-color: #fff;
+  color: #333;
   cursor: pointer;
+  text-align: center;
+  font-size: 42px;
+  transition: all 0.2s;
+ /* 1. 防止文字換行 */
+  white-space: nowrap; 
+  /* 2. 隱藏超出按鈕寬度的文字 */
+  overflow: hidden;
+  /* 3. 在溢出文字末尾顯示省略號 (可選) */
+  text-overflow: ellipsis; 
+  /*
+  *** 確保按鈕有足夠空間顯示文字 ***
+  */
+  /* 設定一個最小寬度，以容納最長的文字 */
+  min-width: 200px; /* 或者根據你的內容調整這個值 */
+   /* 確保按鈕內容在固定尺寸內居中或對齊 */
+  display: flex;
+  align-items: center; /* 垂直居中 */
+  /* 水平居中對齊 */
+  justify-content: center;
+  position: relative;
+}
+.arrow-icon {
+  font-size: 48px;
+  color: #888;
+  cursor: pointer;
+  
+  /*
+  *** 關鍵修改：絕對定位到左上角 ***
+  */
+  position: absolute;
+  top: 4px;   /* 調整這個值來控制離頂部的距離 */
+  left: 8px;  /* 調整這個值來控制離左邊的距離 */
 }
 
+.arrow-icon:hover{
+  background-color: #1f1e33;
+}
 /* 子選單外容器，這個可以繼續使用 */
 .sub-option-container {
   display: flex;
