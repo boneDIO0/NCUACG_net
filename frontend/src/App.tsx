@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgetPwd from './pages/ForgetPwd';
 import Announcement from './pages/Announcement';
+import Club from './pages/Club';
 
 // 共用 Context
 import { AuthProvider } from './contexts/AuthContext';
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="/register" element={<Signup />} />
               <Route path="/forget-password" element={<ForgetPwd />} />
               <Route path="/announcement" element={<Announcement />} />
+              <Route path="/club" element={< Club/>} />
               {/* --- AI 助理聊天頁 --- */}
               <Route path="/assistant" element={<AssistantChat />} />
             </Routes>

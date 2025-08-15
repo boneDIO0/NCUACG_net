@@ -99,7 +99,7 @@ const menuOptions: Option[] = [
         window.location.href = '/about';
         break;
       case '社課介紹':
-        window.location.href = '/services';
+        navigate('/club');
         break;
       case '活動資訊':
         window.location.href = '/contact';
@@ -120,30 +120,7 @@ const menuOptions: Option[] = [
   const handleChildClick = (item: string) => {
   
     switch (item) {
-      /*
-      case '首頁':
-        window.location.href = '/';
-        break;
-        */
-      case '歌謠祭平台':
-        window.location.href = '/about';
-        break;
-      case '社課介紹':
-        window.location.href = '/services';
-        break;
-      case '活動資訊':
-        window.location.href = '/contact';
-        break;
-        
-      case '登入':
-        navigate('/Login');
-        break;
-      case '註冊':
-        navigate('/register');
-        break;
       
-      default:
-        break;
     }
     setIsOpen(false); // ← 點完選單自動關閉 Sidebar
   };
