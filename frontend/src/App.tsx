@@ -14,6 +14,7 @@ import { ChatProvider } from './contexts/ChatContext';
 // AI 助理
 import AssistantChat from './pages/AssistantChat';
 import ChatWidget from './components/ChatWidget';
+
 // import Notice from './pages/Notice';  // 之後要用再解註
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         {/* <aside style={{ width: 200, padding: 20, background: '#f9f9f9' }}>
             <QuickNav />
           </aside> */}
+          
         <main style={{ flex: 1, padding: '20px' }}>
           <AuthProvider>
             <Routes>
@@ -38,9 +40,10 @@ export default function App() {
             </Routes>
           </AuthProvider>
         </main>
-
+          
         {/* 全站浮動 AI 助理按鈕 / 面板 */}
         <ChatWidget />
+        
       </div>
     </ChatProvider>
   );

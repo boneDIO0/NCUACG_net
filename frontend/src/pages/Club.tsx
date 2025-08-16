@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import '../styles/Club.css';
+import Sidebar from '../components/Sidebar';
 
 // 定義六邊形項目的資料結構
 type HexItemType = 'button' | 'text' | 'image' | 'empty';
@@ -7,43 +8,40 @@ type HexItemType = 'button' | 'text' | 'image' | 'empty';
 interface HexItem {
   id: number;
   type: HexItemType;
-  label?: string; // 文字
-  url?: string; // 如果是按鈕，可以導向的網址
-  imageSrc?: string; // 如果是圖案，圖案的來源
+  label?: string;
+  url?: string;
+  imageSrc?: string;
 }
 
-// 模擬六邊形資料，包含所有特徵
+// 你的初始資料
 const initialHexItems: HexItem[] = [
-  { id: 1, type: 'text', label: '社' },
-  { id: 2, type: 'button', label: '動畫\n播放組', url: '/anime' },
-  { id: 3, type: 'button', label: '御宅藝', url: '/otaku' },
-  { id: 4, type: 'text', label: '課' },
-  { id: 5, type: 'button', label: '模型\n製作', url: '/model' },
-  { id: 6, type: 'text', label: '繪畫' },
-  { id: 7, type: 'button', label: 'TRPG', url: '/trpg' },
-  { id: 8, type: 'text', label: '介\n紹' },
-  { id: 9, type: 'image', imageSrc: '/path/to/your-icon.png' },
-  { id: 10, type: 'button', label: 'MV\n剪輯', url: '/mv' },
-  { id: 11, type: 'button', label: '聲優', url: '/seiyuu' },
+  { id: 17, type: 'text', label: '社' },
+  { id: 14, type: 'button', label: '動畫\n播放組', url: '/anime' },
+  { id: 15, type: 'button', label: '御宅藝', url: '/otaku' },
+  { id: 28, type: 'text', label: '課' },
+  { id: 24, type: 'button', label: '模型\n製作', url: '/model' },
+  { id: 25, type: 'button', label: '繪畫' },
+  { id: 26, type: 'button', label: 'TRPG', url: '/trpg' },
+  { id: 22, type: 'text', label: '介' },
+  { id: 34, type: 'button', label: 'MV\n剪輯', url: '/mv' },
+  { id: 35, type: 'button', label: '聲優', url: '/seiyuu' },
+  { id: 32, type: 'text', label: '紹' },
 ];
 
-// 新增一個生成 'empty' 項目的函數
-const generateEmptyHexItems = (startId: number, endId: number): HexItem[] => {
-  const emptyItems: HexItem[] = [];
-  for (let i = startId; i <= endId; i++) {
-    emptyItems.push({
-      id: i,
-      type: 'empty',
-    });
-  }
-  return emptyItems;
-};
+// 決定 hex grid 最大 ID
+const MAX_ID = 50;
 
-// 合併初始項目和新生成的空白項目
-const hexItems: HexItem[] = [
-  ...initialHexItems,
-  ...generateEmptyHexItems(12, 50),
-];
+// 產生完整的 hexItems 陣列
+const hexItems: HexItem[] = Array.from({ length: MAX_ID }, (_, i) => ({
+  id: i + 1,
+  type: 'empty' as HexItemType,
+}));
+
+// 把 initialHexItems 覆蓋進去（確保 id 與 index 一致）
+initialHexItems.forEach(item => {
+  hexItems[item.id - 1] = item;
+});
+
 
 const Club: React.FC = () => {
   const [activeHexId, setActiveHexId] = useState<number | null>(null);
@@ -66,21 +64,31 @@ const Club: React.FC = () => {
 
   return (
     <div className="full-page-container">
+      <Sidebar />
       <div className="hex-grid-container">
-        {hexItems.map((item) => {
+        {hexItems.map((item, index) => {
           const isButton = item.type === 'button';
           const isActive = activeHexId === item.id;
 
+          // 計算行數來決定偏移
+          const row = Math.floor(index / 10);
+          const isOddRow = row % 2 === 1;
+          
           return (
-            <div key={item.id} className="hex-item-wrapper">
+            <div 
+              key={item.id} 
+              className={`hex-item-wrapper ${isOddRow ? 'offset' : ''}`}
+            >
+              <div className='hex-item-border'>
               <div
                 className={`hex-item-content
+                  ${item.type}
                   ${isButton ? 'is-button' : ''}
                   ${isActive ? 'active' : ''}`}
                 onClick={() => handleClick(item)}
-                // 如果不是按鈕，就移除 cursor 樣式
                 style={!isButton ? { cursor: 'default' } : undefined}
               >
+              
                 {/* 根據項目類型渲染不同的內容 */}
                 {item.type === 'text' && (
                   item.label?.split('\n').map((line, index) => (
@@ -95,6 +103,8 @@ const Club: React.FC = () => {
                 {item.type === 'image' && item.imageSrc && (
                   <img src={item.imageSrc} alt="" style={{ maxWidth: '80%', maxHeight: '80%' }} />
                 )}
+                
+                </div>
               </div>
             </div>
           );

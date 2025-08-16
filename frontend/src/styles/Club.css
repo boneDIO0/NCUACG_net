@@ -4,86 +4,201 @@
 .full-page-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;  /* 改為 flex-start */
   align-items: center;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow: hidden;  /* 超出頁面隱藏 */
   background-color: #f0f0f0;
+  position: relative;
+  padding: 360px 20px 20px 20px;  /* 上方增加更多 padding */
+  box-sizing: border-box;
 }
 
 /* ---------------------------------------------------
-   六邊形網格容器 - 使用 Grid 佈局
+   六邊形網格容器 - 蜂窩狀排列
    --------------------------------------------------- */
 .hex-grid-container {
   display: grid;
-  /* 這裡設定網格列，minmax 的值要根據你希望的最小尺寸來調整 */
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px; /* 網格間距 */
-  
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 80%;
-  max-width: 1200px; /* 調整最大寬度以容納更大的六邊形 */
+  grid-template-columns: repeat(10, 170px);  /* 10列，每列170px (85px*2) */
+  grid-template-rows: repeat(7, 150px);      /* 7行，每行150px (75px*2) */
+  gap: 10px;  /* gap: 10px (5px*2) */
+  justify-content: center;
+  align-content: center;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* ---------------------------------------------------
-   六邊形單一元素 - 尺寸和偏移
+   六邊形單一元素包裝器
    --------------------------------------------------- */
 .hex-item-wrapper {
   position: relative;
-  width: 100%;
-  /* 增加 padding-bottom 的值來放大六邊形 */
-  /* 如果你的 width 是 100%，padding-bottom 115.47% 會保持六邊形的比例 */
-  padding-bottom: 115.47%; 
-  
-  /* 讓偶數行的元素向上位移，實現交錯效果 */
-  &:nth-child(even) {
-    transform: translateY(-50%);
-  }
+  width: 160px;  /* 160px (80px*2) */
+  height: 160px; /* 160px (80px*2) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.hex-item-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  
-  /* ... 其他樣式保持不變 ... */
+/* 奇數行偏移，創造蜂窩效果 */
+.hex-item-wrapper.offset {
+  transform: translateX(85px);  /* 85px (42.5px*2) */
+}
+.hex-item-border {
+  width: 160px;  /* 160px (80px*2) */
+  height: 160px; /* 160px (80px*2) */
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  background-color: lightgray;
-  border: 2px solid #333;
-  color: #333;
-  text-align: center;
-  /* 增加字體大小 */
-  font-size: 2vh; 
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  
+  display: flex;
+  line-height: 1.2;
+  padding: 16px;  /* 16px (8px*2) */
+  transition: all 0.3s ease;
+  background-color:#000;
+  z-index: 800;
+  position: relative;
+  white-space: pre-line;
+}
+/* ---------------------------------------------------
+   六邊形內容
+   --------------------------------------------------- */
+.hex-item-content {
+  width: 160px;  /* 160px (80px*2) */
+  height: 160px; /* 160px (80px*2) */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  padding: 1vh;
+  text-align: center;
+  font-size: 22px;  /* 22px (11px*2) */
+  font-weight: bold;
+  line-height: 1.2;
+  padding: 16px;  /* 16px (8px*2) */
   box-sizing: border-box;
+  transition: all 0.3s ease;
+  z-index: 500;
+  position: relative;
+  white-space: pre-line;
+  
+  
 }
 
-.hex-item-content.is-button {
+/* ---------------------------------------------------
+   不同類型的樣式
+   --------------------------------------------------- */
+
+/* 空白六邊形 */
+.hex-item-content.empty {
+  background: #D9D9D9;
+  border-color: #000;
+  cursor: default;
+}
+
+/* 文字六邊形 */
+.hex-item-content.text {
+  background: #52B4FF;
+  border-color: #000;
+  color: #333;
+  font-size: 32px;  /* 32px (16px*2) */
+  font-weight: bold;
+  cursor: default;
+}
+
+/* 按鈕六邊形 */
+.hex-item-content.button {
+  background: #D9D9D9;
+  border-color: #333;
+  color: #333;
   cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);  /* 0 8px 16px (0 4px 8px*2) */
 }
 
-.hex-item-content.is-button:hover {
-  background-color: #ddd;
+/* 圖片六邊形 */
+.hex-item-content.image {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #999;
+  cursor: default;
+  padding: 30px;  /* 30px (15px*2) */
 }
 
+/* ---------------------------------------------------
+   互動效果
+   --------------------------------------------------- */
+
+/* 按鈕hover效果 */
+.hex-item-content.button:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);  /* 0 12px 24px (0 6px 12px*2) */
+}
+
+/* 啟用狀態 */
 .hex-item-content.active {
-  background-color: lightblue;
-  border-color: #007bff;
-  color: #007bff;
+  background: #4facfe;
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 16px 32px rgba(79, 172, 254, 0.3);  /* 0 16px 32px (0 8px 16px*2) */
 }
 
+/* ---------------------------------------------------
+   文字樣式
+   --------------------------------------------------- */
 .hex-item-content span {
   display: block;
+  margin: 2px 0;  /* 2px 0 (1px 0*2) */
+}
+
+/* 圖片樣式 */
+.hex-item-content img {
+  max-width: 100px;  /* 100px (50px*2) */
+  max-height: 100px; /* 100px (50px*2) */
+  object-fit: contain;
+}
+
+/* ---------------------------------------------------
+   響應式設計
+   --------------------------------------------------- */
+@media (max-width: 1024px) {
+  .hex-grid-container {
+    grid-template-columns: repeat(8, 150px);  /* 150px (75px*2) */
+    gap: 6px;  /* 6px (3px*2) */
+  }
+  
+  .hex-item-wrapper {
+    width: 140px;  /* 140px (70px*2) */
+    height: 140px; /* 140px (70px*2) */
+  }
+  
+  .hex-item-content {
+    width: 140px;  /* 140px (70px*2) */
+    height: 140px; /* 140px (70px*2) */
+    font-size: 20px;  /* 20px (10px*2) */
+  }
+  
+  .hex-item-wrapper.offset {
+    transform: translateX(75px);  /* 75px (37.5px*2) */
+  }
+}
+
+@media (max-width: 768px) {
+  .hex-grid-container {
+    grid-template-columns: repeat(6, 130px);  /* 130px (65px*2) */
+    gap: 4px;  /* 4px (2px*2) */
+  }
+  
+  .hex-item-wrapper {
+    width: 120px;  /* 120px (60px*2) */
+    height: 120px; /* 120px (60px*2) */
+  }
+  
+  .hex-item-content {
+    width: 120px;  /* 120px (60px*2) */
+    height: 120px; /* 120px (60px*2) */
+    font-size: 18px;  /* 18px (9px*2) */
+  }
+  
+  .hex-item-wrapper.offset {
+    transform: translateX(65px);  /* 65px (32.5px*2) */
+  }
 }
