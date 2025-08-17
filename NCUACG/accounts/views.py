@@ -48,6 +48,8 @@ class LoginView(APIView):
             # 驗證成功，更新 last_login
             cred.last_login = timezone.now()
             cred.save()
+        else:
+            return Response({"error": "Invalid useremail or password"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 登入成功 → 發 JWT
         refresh = RefreshToken.for_user(user)
