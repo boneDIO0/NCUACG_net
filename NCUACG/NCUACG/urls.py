@@ -17,13 +17,15 @@ Including another URLconf
 # NCUACG/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import login_user, logout_user, register_user
+from accounts.views import LoginView, logout_user, register_user, GetCaptcha
 
 urlpatterns = [
-    path("api/login/", login_user, name="api-login"),
+    path("get-captcha/", GetCaptcha.as_view(), name="get_captcha"),
+    path("login/", LoginView.as_view(), name="login"),
     path("api/logout/", logout_user, name="api-logout"),
     path("admin/", admin.site.urls),
     # ★ 把 assistant 掛到 /api/assistant/ 之下
     path("api/assistant/", include("assistant.urls")),
     path('api/register/', register_user, name='register_user'),
+    path('captcha/', include('captcha.urls')),
 ]

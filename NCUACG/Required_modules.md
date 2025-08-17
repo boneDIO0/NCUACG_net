@@ -5,6 +5,7 @@
 django-cors-headers==4.7.0
 django-simple-captcha==0.6.2
 djangorestframework>=3.15.0
+djangorestframework-simplejwt
 dotenv==0.9.9
 google==3.0.0
 groq>=0.9.0           # 用雲端 Groq

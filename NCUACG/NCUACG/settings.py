@@ -64,6 +64,12 @@ CORS_ALLOWED_ORIGINS = [
 ]
 ROOT_URLCONF = 'NCUACG.urls'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
