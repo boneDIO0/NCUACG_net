@@ -1,0 +1,95 @@
+﻿.modal-overlay {
+ position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1500;
+  cursor: pointer;
+   display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container {
+   z-index: 10000;
+  cursor:default;
+  width: 700px;
+  max-width: 90vw; /* 增加響應式設計 */
+  height: 500px;
+  max-height: 90vh; /* 增加響應式設計 */
+  
+  background-color: #f8f8f8;
+  border: 4px solid #000;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.modal-header {
+  font-size: 36px;
+  font-weight: bold;
+  border-bottom: 3px solid #000;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-content-list {
+  flex-grow: 1; /* 讓內容列表填滿剩餘空間 */
+  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto; /* 如果內容太多，可以滾動 */
+  position: relative; /* 為了放置背景圖片 */
+}
+
+.modal-content-list::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('/path/to/your-gray-photo.jpg') no-repeat center center/cover;
+  filter: grayscale(100%) opacity(0.2); /* 灰階和透明度效果 */
+  z-index: -1;
+}
+
+.modal-content-item {
+  font-size: 20px;
+  color: #333;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 3px solid #000;
+  padding-top: 15px;
+  margin-top: 20px;
+}
+
+.modal-footer button {
+  background: none;
+  border: 2px solid #000;
+  color: #000;
+  font-size: 24px;
+  padding: 8px 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.modal-footer button:hover {
+  background-color: #eee;
+}
+
+.modal-footer .nav-text {
+  font-size: 16px;
+  color: #555;
+}
