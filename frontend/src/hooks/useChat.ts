@@ -1,133 +1,103 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// frontend/src/hooks/useChat.ts
+import { useEffect, useState } from 'react';
 
 export type Role = 'user' | 'assistant' | 'system';
-export type Msg = { role: Role; text: string; ts?: number };
+export type Msg  = { role: Role; text: string };
 
-const STORAGE_KEY = 'ai_chat_history_v1';
+const KEY = 'ai_chat_history_v1';
+const PERSONA_LS_KEY = 'ncuacg.personaId';
+const API_CHAT =
+  (typeof import.meta !== 'undefined' &&
+    (import.meta as any)?.env?.VITE_ASSISTANT_CHAT_URL) ||
+  '/api/assistant/chat/';
 
-// 允許在不同環境（SSR/測試）安全存取 localStorage
-function safeLoad<T>(key: string, fallback: T): T {
+// ---- sessionStorage 封裝 ----
+const store = {
+  get(): Msg[] {
     try {
-        if (typeof window === 'undefined') return fallback;
-        const raw = window.localStorage.getItem(key);
-        return raw ? (JSON.parse(raw) as T) : fallback;
+      const raw = sessionStorage.getItem(KEY);
+      return raw ? (JSON.parse(raw) as Msg[]) : [];
+    } catch {
+      return [];
     }
-    catch {
-        return fallback;
-    }
-}
-function safeSave<T>(key: string, value: T) {
+  },
+  set(list: Msg[]) {
     try {
-        if (typeof window === 'undefined') return;
-        window.localStorage.setItem(key, JSON.stringify(value));
-    }
-    catch {
-        /* ignore */
-    }
-}
+      sessionStorage.setItem(KEY, JSON.stringify(list));
+    } catch {}
+  },
+  clear() {
+    try {
+      sessionStorage.removeItem(KEY);
+    } catch {}
+  },
+};
 
+// ---- Hook ----
 export function useChat() {
-    const [messages, setMessages] = useState<Msg[]>(
-        () =>
-            safeLoad<Msg[]>(STORAGE_KEY, [
-                {
-                    role: 'assistant',
-                    text: '嗨～我是社網 AI 助理，有任何關於社團與網站的問題都可以問我！',
-                    ts: Date.now(),
-                },
-            ])
-    );
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    // 簡單避免重複送出
-    const inFlight = useRef<AbortController | null>(null);
+  const [messages, setMessages] = useState<Msg[]>(() => store.get());
+  const [loading, setLoading] = useState(false);
 
-    // 每次 messages 改變就寫回 localStorage
-    useEffect(
-        () => {
-            safeSave(STORAGE_KEY, messages);
-        },
-        [messages]
-    );
+  // 每次 messages 改變就寫回 sessionStorage
+  useEffect(() => {
+    store.set(messages);
+  }, [messages]);
 
-    // 將要送往後端的對話限制長度，避免 payload 過大
-    const recentForBackend = useMemo(
-        () => {
-            // 只帶最後 20 則訊息；後端若不需要完整脈絡可改成只帶 user 的最後一句
-            return messages.slice(-20).map((m) => ({ role: m.role, content: m.text }));
-        },
-        [messages]
-    );
+  // 送出訊息（附帶 personaId）
+  async function sendMessage(text: string) {
+    const content = text.trim();
+    if (!content) return;
 
-    async function sendMessage(input: string) {
-        if (!input.trim()) return;
-        if (loading && inFlight.current) {
-            // 若需要：取消上一請求
-            inFlight.current.abort();
-            inFlight.current = null;
-        }
-        const userMsg: Msg = { role: 'user', text: input.trim(), ts: Date.now() };
-        setMessages((prev) => [...prev, userMsg]);
-        setError(null);
-        setLoading(true);
+    const userMsg: Msg = { role: 'user', text: content };
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true);
 
-        const controller = new AbortController();
-        inFlight.current = controller;
-
-        try {
-            const res = await fetch('/api/assistant/chat/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                signal: controller.signal,
-                body: JSON.stringify({
-                    // 給後端：最新一則 user 訊息 +（可選）近期對話
-                    message: userMsg.text,
-                    context: recentForBackend, // 後端若不使用可忽略
-                }),
-            });
-
-            if (!res.ok) {
-                const text = await res.text().catch(() => '');
-                throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
-            }
-
-            const data: { reply?: string } = await res.json();
-            const replyText = (data.reply ?? '').trim();
-
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: 'assistant',
-                    text: replyText || '（後端沒有回覆內容）',
-                    ts: Date.now(),
-                },
-            ]);
-        }
-        catch (err: any) {
-            const msg =
-                err?.name === 'AbortError'
-                    ? '請求已取消'
-                    : err?.message || '發生未知錯誤，請稍後再試';
-            setError(msg);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: 'assistant',
-                    text: `抱歉，呼叫後端失敗：${msg}`,
-                    ts: Date.now(),
-                },
-            ]);
-        }
-        finally {
-            setLoading(false);
-            inFlight.current = null;
-        }
+    // 從 LocalStorage 讀取目前 persona（與 PersonaSwitch / ChatContext 對齊）
+    let personaId: string | null = null;
+    try {
+      personaId = localStorage.getItem(PERSONA_LS_KEY);
+    } catch {
+      personaId = null;
     }
 
-    function clear() {
-        setMessages([]);
-        safeSave(STORAGE_KEY, []);
-    }
+    try {
+      const resp = await fetch(API_CHAT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // 若後端用 cookie session，這行可保留；否則不影響
+        body: JSON.stringify({
+          message: content,
+          personaId: personaId || undefined, // 後端亦接受 persona_id
+        }),
+      });
 
-    return { messages, sendMessage, loading, error, clear };
+      if (!resp.ok) {
+        const aiErr: Msg = {
+          role: 'assistant',
+          text: '⚠️ 伺服器回應非 2xx，請稍後再試',
+        };
+        setMessages((prev) => [...prev, aiErr]);
+        return;
+      }
+
+      const data = (await resp.json()) as { reply?: string; error?: string };
+      const reply = (data && data.reply) || data?.error || '（無回應）';
+
+      const aiMsg: Msg = { role: 'assistant', text: reply };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      const aiErr: Msg = { role: 'assistant', text: '⚠️ 連線失敗，請稍後再試' };
+      setMessages((prev) => [...prev, aiErr]);
+      // 可選：console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function clear() {
+    setMessages([]);
+    store.clear(); // 立即清空（不等到關閉分頁）
+  }
+
+  return { messages, sendMessage, loading, clear };
 }
