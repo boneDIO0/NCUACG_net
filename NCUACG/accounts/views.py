@@ -7,30 +7,58 @@ import bcrypt
 from accounts.models import User, Credential
 from django.db import transaction
 from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from captcha.models import CaptchaStore
+from captcha.helpers import captcha_image_url
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
-@csrf_exempt
-def login_user(request):
-    if request.method == 'POST':
+class GetCaptcha(APIView):
+    def get(self, request):
+        new_captcha = CaptchaStore.generate_key()
+        image_url = captcha_image_url(new_captcha)
+        return Response({
+            "captcha_key": new_captcha,
+            "captcha_image_url": image_url
+        })
+
+class LoginView(APIView):
+    def post(self, request):
+        useremail = request.data.get("useremail")
+        password = request.data.get("password")
+        captcha_key = request.data.get("captcha_key")
+        captcha_value = request.data.get("captcha_value")
+
+        # 驗證 Captcha
         try:
-            data = json.loads(request.body)
-            useremail = data['useremail']
-            password = data['password']
+            captcha_obj = CaptchaStore.objects.get(hashkey=captcha_key)
+        except CaptchaStore.DoesNotExist:
+            return Response({"error": "Captcha expired"}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = User.objects.filter(email=useremail).first()
-            cred = Credential.objects.filter(user=user).first()
+        if captcha_obj.response != captcha_value.lower():
+            return Response({"error": "Invalid Captcha"}, status=status.HTTP_400_BAD_REQUEST)
 
-            if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
-                # 驗證成功，更新 last_login
-                cred.last_login = timezone.now()
-                cred.save()
-                return JsonResponse({'message': '登入成功'}, status=200)
-            else:
-                return JsonResponse({'message': '密碼錯誤'}, status=401)
-        except Credential.DoesNotExist:
-            return JsonResponse({'message': '帳號不存在'}, status=404)
-        except Exception as e:
-            return JsonResponse({'message': f'登入錯誤: {str(e)}'}, status=400)
-    return JsonResponse({'message': '不支援的請求方法'}, status=405)
+        # 驗證帳密
+        user = User.objects.filter(email=useremail).first()
+        cred = Credential.objects.filter(user=user).first()
+
+        if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
+            # 驗證成功，更新 last_login
+            cred.last_login = timezone.now()
+            cred.save()
+        else:
+            return Response({"error": "Invalid useremail or password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 登入成功 → 發 JWT
+        refresh = RefreshToken.for_user(user)
+        response = Response({"message": "Login success"})
+        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=True, samesite="Strict")
+        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=True, samesite="Strict")
+        return response
+
+
 
 @csrf_exempt
 def logout_user(request):

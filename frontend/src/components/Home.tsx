@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar.tsx';
 import NoticeBoard from './NoticeBoard.tsx';
 import InfoBox from './InfoBox.tsx';
-import '../style/Home-p0.css';
-import '../style/Home-p1.css';
-import '../style/Home-p2.css';
-import '../style/Page-content.css';
-import '../style/Page-navigation.css';
+import '../styles/Home-p0.css';
+import '../styles/Home-p1.css';
+import '../styles/Home-p2.css';
+import '../styles/Page-content.css';
+import '../styles/Page-navigation.css';
 
 
 const Home: React.FC = () => {

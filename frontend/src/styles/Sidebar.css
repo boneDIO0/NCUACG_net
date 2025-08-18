@@ -1,0 +1,282 @@
+﻿/* 遮罩層 */
+.sidebar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1500;
+  cursor: pointer;
+}
+
+/* 側邊欄容器 */
+.sidebar-contents {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100vh;
+  background-color: #F4F0EB;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 1600;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* 關閉按鈕 */
+.close-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 1400;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+  outline: none;
+  background: 'none';
+  border: 'none'; 
+  padding: 0;
+}
+
+/* 標題 */
+.sidebar-title {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* 區塊標題 */
+.sidebar-section-title {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+
+
+/* 登入 / 登出按鈕 */
+.login-button {
+  padding: 12px 16px;
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  background-color: #f0f8ff;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.logout-button {
+  padding: 12px 16px;
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  background-color: #fff0f0;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.user-info {
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+.signup-button{
+  padding: 12px 16px;
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  background-color: #f0f8ff;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+
+/* 動作按鈕 */
+.action-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+
+/* 開啟按鈕（三條線） */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 1400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+  outline: none;
+}
+
+.toggle-line {
+  width: 20px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+}
+/*sidebar子按鈕的區塊*/
+.sidebar-open-button{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 1400;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+  outline: none;
+  background: 'none';
+  border: 'none'; 
+  padding: 0;
+}
+/* 主選項外框 */
+.menu-item-wrapper {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* 包住主按鈕直欄，讓左側面板可以絕對定位到它的左邊 */
+.menu-right-side {
+  position: relative;
+  display: inline-block; /* 讓寬度貼合主欄 */
+}
+
+/* 主按鈕直欄 */
+.menu-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+   /* 讓按鈕在容器中平均分配空間 */
+  justify-content: center; /* 讓整個按鈕群組在容器中垂直居中 */
+  /* 或者使用 flex-grow 讓每個按鈕佔據更多空間
+  justify-content: flex-start;
+  */
+  
+  /* 確保容器本身有足夠的高度 */
+  height: 100%; /* 或者一個固定的高度，例如 800px */
+}
+/* 選項按鈕 */
+.option-buttons {
+  width: 300px; /* 設定你希望的按鈕固定寬度 */
+  height: 200px; /* 設定你希望的按鈕固定高度 */
+  padding-left: 32px;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  border-color: #000;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  text-align: center;
+  font-size: 42px;
+  transition: all 0.2s;
+ /* 1. 防止文字換行 */
+  white-space: nowrap; 
+  /* 2. 隱藏超出按鈕寬度的文字 */
+  overflow: hidden;
+  /* 3. 在溢出文字末尾顯示省略號 (可選) */
+  text-overflow: ellipsis; 
+  /*
+  *** 確保按鈕有足夠空間顯示文字 ***
+  */
+  /* 設定一個最小寬度，以容納最長的文字 */
+  min-width: 200px; /* 或者根據你的內容調整這個值 */
+   /* 確保按鈕內容在固定尺寸內居中或對齊 */
+  display: flex;
+  align-items: center; /* 垂直居中 */
+  /* 水平居中對齊 */
+  justify-content: center;
+  position: relative;
+}
+.arrow-icon {
+  font-size: 48px;
+  color: #888;
+  cursor: pointer;
+  
+  /*
+  *** 關鍵修改：絕對定位到左上角 ***
+  */
+  position: absolute;
+  top: 4px;   /* 調整這個值來控制離頂部的距離 */
+  left: 8px;  /* 調整這個值來控制離左邊的距離 */
+}
+
+.arrow-icon:hover{
+  background-color: #1f1e33;
+}
+/* 子選單外容器，這個可以繼續使用 */
+.sub-option-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/**/
+.left-subpanel {
+  position: fixed;
+  top: 10px; /* 調整到你希望的位置，例如離頂部10px */
+  right: 380px; /* 距離主面板的距離 */
+  width: auto; /* 讓寬度自動適應內容 */
+  height: auto; /* 讓高度自動適應內容 */
+  background-color: #F4F0EB;
+  color:#000;
+  z-index: 1600;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  /* 增加一個陰影讓面板看起來更像一個浮動的區塊 */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 子按鈕 */
+.sub-option-button {
+  min-width: 160px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  color: #000;   
+  border: 2px solid #000;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.sub-option-button:hover {
+  background: #f1f0ff;
+}

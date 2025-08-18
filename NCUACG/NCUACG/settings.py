@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'accounts'
+    'accounts',
+    'captcha',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +63,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 ROOT_URLCONF = 'NCUACG.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 TEMPLATES = [
     {

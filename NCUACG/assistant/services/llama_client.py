@@ -16,7 +16,6 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Chat 組裝
-
 def _messages(prompt: str, context: Optional[str], persona_slug: Optional[str]) -> List[Dict[str, str]]:
     # 從 personas.py 取出對應 persona 的 system prompt
     system = get_persona_prompt(persona_slug)
@@ -31,7 +30,6 @@ def _messages(prompt: str, context: Optional[str], persona_slug: Optional[str]) 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 對外函式
-
 def ask_llama(prompt: str, context: Optional[str] = None, persona_slug: Optional[str] = None) -> str:
     """
     直接呼叫 LLM。
