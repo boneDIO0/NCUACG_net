@@ -120,7 +120,11 @@ const menuOptions: Option[] = [
   const handleChildClick = (item: string) => {
   
     switch (item) {
-      
+      case '聲優組':
+      navigate('/club/works');
+      break;
+      default:
+        break;
     }
     setIsOpen(false); // ← 點完選單自動關閉 Sidebar
   };
@@ -244,7 +248,7 @@ const menuOptions: Option[] = [
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="sub-option-button"
-                                onClick={()=>handleChildClick}
+                                onClick={()=>handleChildClick(child.name)}
                               >
                                 {child.name}
                               </motion.button>
