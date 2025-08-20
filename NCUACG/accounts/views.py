@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import bcrypt
-from accounts.models import User, Credential
+from accounts.models import User, Credential, VerificationToken
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -14,6 +14,9 @@ from captcha.models import CaptchaStore
 from captcha.helpers import captcha_image_url
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 
 class GetCaptcha(APIView):
     def get(self, request):
@@ -23,6 +26,7 @@ class GetCaptcha(APIView):
             "captcha_key": new_captcha,
             "captcha_image_url": image_url
         })
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -59,29 +63,35 @@ class LoginView(APIView):
         return response
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class CSRFTokenView(APIView):
+    def get(self, request, *args, **kwargs):
+        return Response({"message": "CSRF cookie set"})
+    
 
-@csrf_exempt
-def logout_user(request):
-    # 若沒 session/token，後端可以不做事
-    return JsonResponse({'message': '登出成功'}, status=200)
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({'message': '登出成功'})
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        return response
 
-@csrf_exempt
-def register_user(request):
-    if request.method == 'POST':
+
+class RegisterView(APIView):
+    def post(self, request):
         try:
-            data = json.loads(request.body)
-            username = data['username']
-            email = data['useremail']
-            password = data['password']
+            username = request.data.get("username")
+            email = request.data.get("useremail")
+            password = request.data.get("password")
 
-            # ✅ 加密密碼
-            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             if User.objects.filter(email=email).exists():
-                return JsonResponse({'message': '此 Email 已註冊過'}, status=400)
+                return Response({'message': '此 Email 已註冊過'}, status=400)
             if User.objects.filter(name=username).exists():
-                return JsonResponse({'message': '此名字已被使用'}, status=400)
-            with transaction.atomic():  # 🔐 開啟資料庫交易
-            # ✅ 建立使用者記錄
+                return Response({'message': '此名字已被使用'}, status=400)
+
+            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            with transaction.atomic():
                 user = User.objects.create(name=username, email=email)
                 Credential.objects.create(
                     username=username,
@@ -89,9 +99,23 @@ def register_user(request):
                     user=user
                 )
 
-            return JsonResponse({'message': '註冊成功'}, status=201)
+            return Response({'message': '註冊成功'}, status=201)
         except Exception as e:
-            print(f"錯誤: {e}")
-            return JsonResponse({'message': f'註冊失敗: {str(e)}'}, status=400)
+            return Response({'message': f'註冊失敗: {str(e)}'}, status=400)
+        
 
-    return JsonResponse({'message': '不支援的請求方法'}, status=405)
+class VerifyRegistrationView(APIView):
+    def get(self, request):
+        token_value = request.query_params.get("token")
+        token_obj = VerificationToken.objects.filter(token=token_value, is_used=False).first()
+
+        if not token_obj or token_obj.is_expired():
+            return Response({"error": "驗證連結無效或已過期"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 驗證成功
+        token_obj.is_used = True
+        token_obj.save()
+        token_obj.user.is_active = True
+        token_obj.user.save()
+
+        return Response({"message": "驗證成功，註冊完成"}, status=status.HTTP_200_OK)
