@@ -16,6 +16,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from .verifyemail import generate_verification_token, send_verification_email
 
 
 class GetCaptcha(APIView):
@@ -92,14 +93,27 @@ class RegisterView(APIView):
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
             with transaction.atomic():
-                user = User.objects.create(name=username, email=email)
+                # 建立未啟用的帳號
+                user = User.objects.create(
+                    name=username,
+                    email=email,
+                    is_active=False
+                )
                 Credential.objects.create(
                     username=username,
                     password_hash=hashed.decode('utf-8'),
                     user=user
                 )
 
-            return Response({'message': '註冊成功'}, status=201)
+                # 建立驗證 token
+                token = generate_verification_token()
+                VerificationToken.objects.create(user=user, token=token)
+
+                # 發送驗證信
+                send_verification_email(email, token)
+
+            return Response({'message': '註冊成功，請查收驗證信'}, status=201)
+
         except Exception as e:
             return Response({'message': f'註冊失敗: {str(e)}'}, status=400)
         
