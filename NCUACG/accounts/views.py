@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .verifyemail import generate_verification_token, send_verification_email
-
+import os
 
 class GetCaptcha(APIView):
     def get(self, request):
@@ -133,3 +133,29 @@ class VerifyRegistrationView(APIView):
         token_obj.user.save()
 
         return Response({"message": "驗證成功，註冊完成"}, status=status.HTTP_200_OK)
+    
+class Super_adminView(APIView):
+    def post(self, request):
+        super_admin_password = request.data.get("super_admin_password")
+        useremail = request.data.get("useremail")
+        password = request.data.get("password")
+        # 超級網管註冊
+        if super_admin_password == os.getenv("super_admin_password"):
+            if not User.objects.filter(is_super_admin=True).exists():
+                user = User.objects.filter(email=useremail).first()
+                cred = Credential.objects.filter(user=user).first()
+                if user:
+                    if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
+                        user.is_super_admin = True
+                        user.is_admin = True
+                        user.save()
+                        return Response({"message": "已成功成為網管"}, status=201)
+                    else:
+                        return Response({"error": "用戶密碼錯誤"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"error": "此用戶不存在"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            else:
+                return Response({"error": "已存在超級網管"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "超級網管密碼錯誤"}, status=status.HTTP_400_BAD_REQUEST)
