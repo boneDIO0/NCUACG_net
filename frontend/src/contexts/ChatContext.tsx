@@ -1,7 +1,7 @@
 // frontend/src/contexts/ChatContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useChat } from '../hooks/useChat';
+import useChat from '../hooks/useChat';
 
 const PERSONA_LS_KEY = 'ncuacg.personaId';
 const PERSONA_EVENT = 'persona:change';

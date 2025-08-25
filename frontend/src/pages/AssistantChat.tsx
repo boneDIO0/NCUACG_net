@@ -1,27 +1,34 @@
-// frontend/src/pages/AssistantChat.tsx  或  frontend/src/AssistantChat.tsx
-// 依你的專案實際路徑放置；以下以你提供的相對匯入為準
-import { useEffect, useState } from 'react';
-import { useChatContext } from '../contexts/ChatContext'; // ★ 全域 Context
+// frontend/src/pages/AssistantChat.tsx
+import { useEffect, useRef, useState } from 'react';
+import { useChatContext } from '../contexts/ChatContext';
 import ChatBubble from '../components/ChatBubble';
-import PersonaSwitch from '../components/PersonaSwitch'; // ★ 新增：角色切換器
+import PersonaSwitch from '../components/PersonaSwitch';
 import './AssistantChat.css';
 
 const PERSONA_LS_KEY = 'ncuacg.personaId';
 
+// 本地訊息型別（若你的 Context 已匯出型別，可改成由 Context 匯入）
+type ChatMsg = {
+  role: 'user' | 'assistant' | 'system';
+  text: string;
+};
+
 export default function AssistantChat() {
   const { messages, sendMessage, loading } = useChatContext();
   const [input, setInput] = useState('');
-
-  // 追蹤目前 persona（供顯示/後續擴充送出時使用）
   const [personaId, setPersonaId] = useState<string>(() => {
-    try {
-      return localStorage.getItem(PERSONA_LS_KEY) || '';
-    } catch {
-      return '';
-    }
+    try { return localStorage.getItem(PERSONA_LS_KEY) || ''; } catch { return ''; }
   });
 
-  // 監聽 PersonaSwitch 廣播事件，保持畫面同步
+  // 可滾動區參考 + 自動捲到底
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, loading]);
+
+  // 同步 Persona 切換事件
   useEffect(() => {
     const onChange = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -31,14 +38,27 @@ export default function AssistantChat() {
     return () => window.removeEventListener('persona:change', onChange as EventListener);
   }, []);
 
-  return (
-    <section className="chat-container">
-      <h2>社網 AI 助理</h2>
+  // 讓滾輪事件優先在內層生效
+  const handleWheelCapture: React.WheelEventHandler<HTMLDivElement> = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const before = el.scrollTop;
+    el.scrollTop += e.deltaY;
+    if (el.scrollTop !== before) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
-      {/* ★ 角色切換：小螢幕自動轉下拉，詳見 PersonaSwitch.tsx */}
+  return (
+    <section
+      className="chat-container chat-shell"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}
+    >
+      <h2 style={{ margin: '0 0 .25rem' }}>社網 AI 助理</h2>
+
       <div style={{ margin: '0.5rem 0' }}>
         <PersonaSwitch />
-        {/* 可選：顯示目前角色 ID（之後你可以換成顯示名稱） */}
         {personaId && (
           <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
             目前角色：{personaId}
@@ -46,8 +66,20 @@ export default function AssistantChat() {
         )}
       </div>
 
-      <div className="chat-window">
-        {messages.map((m, i) => (
+      {/* 可滾動區 */}
+      <div
+        ref={scrollRef}
+        className="chat-window chat-scroll"
+        onWheelCapture={handleWheelCapture}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          padding: '0.25rem 0',
+        }}
+      >
+        { (messages as ChatMsg[]).map((m: ChatMsg, i: number) => (   // ★ 明確型別
           <ChatBubble key={i} role={m.role} text={m.text} />
         ))}
         {loading && <p className="typing">AI 正在輸入...</p>}
@@ -57,19 +89,20 @@ export default function AssistantChat() {
         onSubmit={(e) => {
           e.preventDefault();
           if (!input.trim()) return;
-
-          // TODO：待你於 useChat.ts 增加 persona 參數後，改為：
-          // sendMessage(input.trim(), { personaId });
-          sendMessage(input.trim());
+          sendMessage(input.trim(), { personaId });
           setInput('');
         }}
+        style={{ marginTop: '.5rem' }}
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="輸入訊息..."
+          style={{ width: '75%' }}
         />
-        <button type="submit" disabled={loading}>送出</button>
+        <button type="submit" disabled={loading} style={{ marginLeft: '.5rem' }}>
+          送出
+        </button>
       </form>
     </section>
   );
