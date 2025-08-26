@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 from rest_framework import serializers
 
+# ✨ 新增：從 personas 單一來源載入驗證介面
+from .services.personas import get_persona
 
 __all__ = [
     "ChatRequestSerializer",
@@ -46,11 +48,19 @@ class ChatRequestSerializer(serializers.Serializer):
         else:
             raise serializers.ValidationError({"message": "message must be a string"})
 
-        # 轉為 None 而非空字串，讓後端更好判斷
+        # 正規化空字串為 None
         if isinstance(attrs.get("persona"), str) and attrs["persona"].strip() == "":
             attrs["persona"] = None
         if isinstance(attrs.get("conversation_id"), str) and attrs["conversation_id"].strip() == "":
             attrs["conversation_id"] = None
+
+        # ✨ 新增：若有傳入 persona，做合法性驗證（不存在就報 400）
+        pid = attrs.get("persona")
+        if isinstance(pid, str) and pid:
+            try:
+                get_persona(pid)  # 找不到會丟 KeyError
+            except KeyError:
+                raise serializers.ValidationError({"persona": f"Invalid persona: {pid}"})
 
         return attrs
 

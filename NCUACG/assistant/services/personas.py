@@ -76,8 +76,12 @@ DEFAULT_PERSONA_ID = (
 )
 
 # ----------------------------------------------
-# 檔案載入與正規化
+# 檔案載入與正規化 + 熱重載快取
 # ----------------------------------------------
+_CACHE: Dict[str, Dict[str, Any]] = {}
+_SRC: Optional[str] = None
+_MTIME: Optional[float] = None
+
 def _base_dir() -> str:
     if settings and getattr(settings, "BASE_DIR", None):
         return str(settings.BASE_DIR)
@@ -91,8 +95,13 @@ def _candidate_persona_paths() -> List[str]:
     ]
 
 def _load_json(path: str) -> Any:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    # 先用 utf-8；失敗時用 utf-8-sig（解決 BOM）
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        with open(path, "r", encoding="utf-8-sig") as f:
+            return json.load(f)
 
 def _normalize_persona_item(pid: str, obj: Dict[str, Any]) -> Dict[str, Any]:
     # 名稱/描述鍵位相容
@@ -123,7 +132,7 @@ def _normalize_personas(raw: Any) -> Dict[str, Dict[str, Any]]:
     by_id: Dict[str, Dict[str, Any]] = {}
     if isinstance(raw, list):
         for item in raw:
-            if not isinstance(item, dict):  # 跳過非物件
+            if not isinstance(item, dict):
                 continue
             pid = item.get("id")
             if not pid:
@@ -177,6 +186,26 @@ def _merge_with_fallback(meta_by_id: Dict[str, Dict[str, Any]]) -> Dict[str, Dic
         }
     return merged
 
+def _load_personas_cached() -> Dict[str, Dict[str, Any]]:
+    """
+    具 mtime 熱重載的讀取：檔案未變動則走快取；否則重新載入並合併後援。
+    若兩個候選路徑皆不存在，則以空結果與 FALLBACK 合併。
+    """
+    global _CACHE, _SRC, _MTIME
+    file_meta, src = _load_personas_from_files()
+    if src and os.path.exists(src):
+        mtime = os.path.getmtime(src)
+        if _CACHE and _SRC == src and _MTIME == mtime:
+            return _CACHE
+        merged = _merge_with_fallback(file_meta)
+        _CACHE, _SRC, _MTIME = merged, src, mtime
+        return merged
+
+    # 無檔案：只用 FALLBACK
+    merged = _merge_with_fallback({})
+    _CACHE, _SRC, _MTIME = merged, None, None
+    return merged
+
 # ----------------------------------------------
 # 對外 API
 # ----------------------------------------------
@@ -185,32 +214,69 @@ def get_personas() -> List[Dict[str, Any]]:
     回傳 persona 清單（不含 system prompt）：
     [{ id, name, avatar, description }]
     """
-    file_meta, _src = _load_personas_from_files()
-    data = _merge_with_fallback(file_meta)
+    data = _load_personas_cached()
     # 排序：預設 persona 優先，其餘依名稱
     def sort_key(x: Dict[str, Any]) -> tuple:
         return (0 if x["id"] == DEFAULT_PERSONA_ID else 1, x["name"])
     rows = sorted(data.values(), key=sort_key)
     # 過濾內部欄位
-    return [{"id": r["id"], "name": r["name"], "avatar": r["avatar"], "description": r["description"]} for r in rows]
+    return [
+        {"id": r["id"], "name": r["name"], "avatar": r["avatar"], "description": r["description"]}
+        for r in rows
+    ]
+
+def get_persona(persona_id: str) -> Dict[str, Any]:
+    """
+    取得單一 persona 規格（含內部用的 `_system_prompt`）。
+    若找不到傳入 id，拋 KeyError。
+    """
+    data = _load_personas_cached()
+    if persona_id in data:
+        return dict(data[persona_id])  # 傳副本，避免外部修改快取
+    raise KeyError(f"persona not found: {persona_id}")
+
+def get_default_persona_id() -> str:
+    """
+    取得預設 persona id：
+    - 設定檔/環境變數指定者優先
+    - 否則若 FALLBACK 存在 "weekend_curator" 就用它
+    - 最後任取第一個可用 id（避免 None）
+    """
+    data = _load_personas_cached()
+    if DEFAULT_PERSONA_ID in data:
+        return DEFAULT_PERSONA_ID
+    if "weekend_curator" in data:
+        return "weekend_curator"
+    # 任取一個 id 作為保底
+    for pid in data.keys():
+        return pid
+    # 如真的沒有（理論上不會），回傳常數
+    return DEFAULT_PERSONA_ID
 
 def get_system_prompt(persona_id: Optional[str]) -> str:
     """
     取得指定 persona 的 system prompt；若無則回退到預設。
     """
-    pid = persona_id or DEFAULT_PERSONA_ID
-    file_meta, _src = _load_personas_from_files()
-    data = _merge_with_fallback(file_meta)
+    pid = persona_id or get_default_persona_id()
+    data = _load_personas_cached()
     prompt = (data.get(pid, {}) or {}).get("_system_prompt")
     if isinstance(prompt, str) and prompt.strip():
         return prompt
     # 若找不到該 id，回退到預設 id，再找一次
-    fallback = (data.get(DEFAULT_PERSONA_ID, {}) or {}).get("_system_prompt")
+    fallback = (data.get(get_default_persona_id(), {}) or {}).get("_system_prompt")
     if isinstance(fallback, str) and fallback.strip():
         return fallback
     # 最後保底（理論上到不了）
-    return PERSONAS.get(DEFAULT_PERSONA_ID, "")
+    return PERSONAS.get(get_default_persona_id(), "")
 
 # 舊名稱相容
 def get_persona_prompt(persona_id: Optional[str]) -> str:
     return get_system_prompt(persona_id)
+
+__all__ = [
+    "get_personas",
+    "get_persona",
+    "get_default_persona_id",
+    "get_system_prompt",
+    "get_persona_prompt",
+]

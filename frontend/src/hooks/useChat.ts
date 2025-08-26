@@ -1,8 +1,33 @@
 // frontend/src/hooks/useChat.ts
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-export type Role = 'user' | 'assistant' | 'system';
+/** ────────────────────────────────────────────────────────────────────────────
+ *  URL utils（步驟 8）
+ *  - 任何 API 常數都經過 ensureSlash()，保證以 `/` 結尾，避免 Django APPEND_SLASH 問題
+ *  - 支援三種環境變數（擇一設定即可）：
+ *      VITE_ASSISTANT_CHAT_URL、VITE_ASSISTANT_PERSONAS_URL、VITE_ASSISTANT_BASE_URL
+ *    若僅給 BASE_URL，端點會自動補上 chat/、personas/
+ *  ─────────────────────────────────────────────────────────────────────────── */
+const ensureSlash = (input?: string, fallback: string = ''): string => {
+  const raw = (input ?? fallback).trim();
+  if (!raw) return '';
+  return raw.endsWith('/') ? raw : `${raw}/`;
+};
+const API_BASE = ensureSlash(
+  import.meta.env.VITE_ASSISTANT_BASE_URL as string | undefined,
+  '/api/assistant/' // 後端 DRF 預設掛載在此時的 fallback
+);
+const API_CHAT = ensureSlash(
+  (import.meta.env.VITE_ASSISTANT_CHAT_URL as string | undefined) ??
+    (API_BASE ? `${API_BASE}chat` : '')
+);
+const API_PERSONAS = ensureSlash(
+  (import.meta.env.VITE_ASSISTANT_PERSONAS_URL as string | undefined) ??
+    (API_BASE ? `${API_BASE}personas` : '')
+);
 
+// ────────────────────────────────────────────────────────────────────────────
+export type Role = 'user' | 'assistant' | 'system';
 export type Message = {
   id?: string;
   role: Role;
@@ -11,55 +36,44 @@ export type Message = {
 };
 
 type SendOptions = {
-  personaId?: string;          // 允許呼叫端覆寫當前 persona
-  conversationId?: string;     // 若要延續同一對話
+  personaId?: string;      // 允許呼叫端覆寫當前 persona
+  conversationId?: string; // 若要延續同一對話
 };
 
+type UseChatState = {
+  messages: Message[];
+  loading: boolean;
+  error: string | null;
+  conversationId?: string;
+};
+type UseChatApi = UseChatState & {
+  sendMessage: (text: string, opts?: SendOptions) => Promise<void>;
+  reset: () => void;
+  abort: () => void;
+  getPersona: () => string | undefined;
+  setPersona: (id: string) => void;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// LocalStorage keys（與其他檔案一致）
 const PERSONA_LS_KEY = 'ncuacg.personaId';
-const CONV_LS_KEY = 'ncuacg.convId';
+const CONV_LS_KEY = 'ncuacg.conversationId';
+const getPersonaFromLS = () => {
+  const v = localStorage.getItem(PERSONA_LS_KEY);
+  return v || undefined;
+};
+const setPersonaToLS = (id: string) => localStorage.setItem(PERSONA_LS_KEY, id);
+const getConvFromLS = () => {
+  const v = localStorage.getItem(CONV_LS_KEY);
+  return v || undefined;
+};
+const setConvToLS = (id?: string) => {
+  if (!id) return;
+  localStorage.setItem(CONV_LS_KEY, id);
+};
 
-// ---- NEW: 確保 API 常數結尾一定是 '/'，避免 Django 的 APPEND_SLASH 問題 ----
-const ensureSlash = (u?: string) => (u ? (u.endsWith('/') ? u : u + '/') : undefined);
-
-// 可由 .env 設定；否則走後端預設路由（結尾務必有 '/'）
-const API_CHAT =
-  ensureSlash((import.meta as any)?.env?.VITE_ASSISTANT_CHAT_URL) ||
-  '/api/assistant/chat/';
-
-function getPersonaFromLS(): string | undefined {
-  try {
-    const v = localStorage.getItem(PERSONA_LS_KEY);
-    return v && v.trim() ? v : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function setPersonaToLS(id?: string) {
-  try {
-    if (!id) localStorage.removeItem(PERSONA_LS_KEY);
-    else localStorage.setItem(PERSONA_LS_KEY, id);
-  } catch {}
-}
-
-function getConvFromLS(): string | undefined {
-  try {
-    const v = localStorage.getItem(CONV_LS_KEY);
-    return v && v.trim() ? v : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function setConvToLS(id?: string) {
-  try {
-    if (!id) localStorage.removeItem(CONV_LS_KEY);
-    else localStorage.setItem(CONV_LS_KEY, id);
-  } catch {}
-}
-
-// 先宣告函式，最後同時做 default 與 named export（避免匯入寫法不一致）
-function useChat() {
+// ────────────────────────────────────────────────────────────────────────────
+export function useChat(): UseChatApi {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>(() => getConvFromLS());
   const [loading, setLoading] = useState(false);
@@ -74,7 +88,10 @@ function useChat() {
     };
     const onStorage = (e: StorageEvent) => {
       if (e.key === PERSONA_LS_KEY) {
-        // 這裡可視需要觸發 setState 讓 UI 立即反映 persona 改變
+        // 可視需求補充：收到他頁修改 persona 後，這裡是否要做 UI 提示或清空對話
+      }
+      if (e.key === CONV_LS_KEY && e.newValue !== conversationId) {
+        setConversationId(e.newValue || undefined);
       }
     };
     window.addEventListener('persona:change', onPersonaChange as EventListener);
@@ -83,93 +100,99 @@ function useChat() {
       window.removeEventListener('persona:change', onPersonaChange as EventListener);
       window.removeEventListener('storage', onStorage);
     };
-  }, []);
+  }, [conversationId]);
 
-  const reset = useCallback(() => {
-    setMessages([]);
-    setConversationId(undefined);
-    setError(null);
-    setConvToLS(undefined);
-  }, []);
-
+  // 送訊息（帶 persona 與 convId）
   const sendMessage = useCallback(
-    async (content: string, opts?: SendOptions) => {
-      if (!content.trim()) return;
+    async (text: string, opts?: SendOptions) => {
+      const trimmed = (text ?? '').trim();
+      if (!trimmed) return;
+      if (!API_CHAT) {
+        setError('Chat API URL 未設定');
+        return;
+      }
+
+      // 先寫入 user 訊息
+      const userMsg: Message = { role: 'user', text: trimmed, ts: Date.now() };
+      setMessages((prev) => [...prev, userMsg]);
+      setLoading(true);
       setError(null);
 
-      // 1) 樂觀更新使用者訊息
-      const userMsg: Message = { role: 'user', text: content.trim(), ts: Date.now() };
-      setMessages((prev) => [...prev, userMsg]);
+      // 構造 payload（步驟 8：一律打到確保尾斜線的 API_CHAT）
+      const persona = opts?.personaId ?? getPersonaFromLS();
+      const body: Record<string, unknown> = {
+        message: trimmed,
+        persona, // 後端 serializers 已支援可選的 persona 欄位
+      };
+      const convId = opts?.conversationId ?? conversationId;
+      if (convId) body['conversation_id'] = convId;
 
-      // 2) 準備請求
-      const controller = new AbortController();
       abortRef.current?.abort();
-      abortRef.current = controller;
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
 
-      setLoading(true);
       try {
-        const personaFromLS = getPersonaFromLS();
-        const persona = opts?.personaId ?? personaFromLS; // 若呼叫端覆寫就用覆寫值
-
-        const body = {
-          message: content.trim(),
-          conversation_id: opts?.conversationId ?? conversationId ?? undefined,
-          // 同時帶兩個鍵以增加與後端相容性（後端 serializer 收 persona）
-          persona: persona,
-          personaId: persona,
-        };
-
-        const resp = await fetch(API_CHAT, {
+        const res = await fetch(API_CHAT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          signal: controller.signal,
           body: JSON.stringify(body),
+          signal: ctrl.signal,
+          // credentials: 'include', // 若跨網域且需 cookie，再打開
         });
 
-        if (!resp.ok) {
-          const txt = await resp.text().catch(() => '');
-          throw new Error(`HTTP ${resp.status} ${resp.statusText}${txt ? ` - ${txt}` : ''}`);
+        // 400：可能是 persona 非法 → 回傳 available_personas
+        if (res.status === 400) {
+          const data = await res.json().catch(() => ({} as any));
+          const detail = data?.detail ?? 'Bad Request';
+          const available = data?.available_personas as Array<{ id: string; name?: string }>|undefined;
+          setError(detail);
+          if (available?.length) {
+            // 自動 fallback：改用第一個合法 persona 再重試（可依需求保守化處理）
+            const fallback = available[0].id;
+            setPersonaToLS(fallback);
+          }
+          return;
         }
 
-        const data = await resp.json().catch(() => ({} as any));
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(txt || `HTTP ${res.status}`);
+        }
 
-        const replyText: string =
-          data.reply ?? data.message ?? data.text ?? '(後端未回傳文字內容)';
-        const newConvId: string | undefined = data.conversation_id ?? data.conversationId ?? conversationId;
-
-        // 3) 設定對話 ID（若後端回傳）
+        const data = await res.json();
+        const replyText: string = data?.reply ?? '';
+        const newConvId: string | undefined = data?.conversation_id;
+        const usedPersona: string | undefined = data?.persona;
         if (newConvId && newConvId !== conversationId) {
           setConversationId(newConvId);
           setConvToLS(newConvId);
         }
+        if (usedPersona) {
+          setPersonaToLS(usedPersona);
+        }
 
-        // 4) 加入助理訊息
-        const botMsg: Message = { role: 'assistant', text: String(replyText || '').trim(), ts: Date.now() };
+        const botMsg: Message = { role: 'assistant', text: replyText, ts: Date.now() };
         setMessages((prev) => [...prev, botMsg]);
-      } catch (err: any) {
-        const msg = err?.message || '發送失敗，請稍後再試';
-        setError(msg);
-        // 若失敗，補上一則系統錯誤訊息，避免畫面沒有回饋
-        setMessages((prev) => [
-          ...prev,
-          { role: 'system', text: `⚠️ ${msg}`, ts: Date.now() },
-        ]);
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return;
+        setError(e?.message ?? 'Network error');
       } finally {
         setLoading(false);
-        abortRef.current = null;
       }
     },
     [conversationId]
   );
 
-  const state = useMemo(
-    () => ({
-      messages,
-      loading,
-      error,
-      conversationId,
-    }),
+  const reset = useCallback(() => {
+    setMessages([]);
+    setError(null);
+    setLoading(false);
+    setConversationId(undefined);
+    localStorage.removeItem(CONV_LS_KEY);
+  }, []);
+
+  const state: UseChatState = useMemo(
+    () => ({ messages, loading, error, conversationId }),
     [messages, loading, error, conversationId]
   );
 
@@ -177,13 +200,11 @@ function useChat() {
     ...state,
     sendMessage,
     reset,
-    // 提供一些可選的工具（呼叫端不一定用得到）
     abort: () => abortRef.current?.abort(),
     getPersona: getPersonaFromLS,
     setPersona: setPersonaToLS,
   };
 }
 
-// 同時提供 default 與 named export，避免外部以不同匯入寫法出錯
+// 兼容：同時導出 default 與 named
 export default useChat;
-export { useChat };
