@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any, Dict, List, Tuple, Optional
+
+# personas.py 內：替換 _candidate_persona_paths()
+from pathlib import Path
 
 # Django 設定非強制（測試腳本也可載入）；若無 settings 就以 CWD 回退
 try:
@@ -88,10 +92,12 @@ def _base_dir() -> str:
     return os.getcwd()
 
 def _candidate_persona_paths() -> List[str]:
-    base = _base_dir()
+    here = Path(__file__).resolve()
+    assistant_dir = here.parents[1]   # .../assistant/
+    repo_root = here.parents[3]       # 專案根目錄 NCUACG_net/
     return [
-        os.path.join(base, "NCUACG", "assistant", "prompts", "personas.json"),
-        os.path.join(base, "frontend", "src", "data", "personas.json"),
+        str(assistant_dir / "prompts" / "personas.json"),
+        str(repo_root / "frontend" / "src" / "data" / "personas.json"),
     ]
 
 def _load_json(path: str) -> Any:
@@ -108,6 +114,7 @@ def _normalize_persona_item(pid: str, obj: Dict[str, Any]) -> Dict[str, Any]:
     name = obj.get("name") or obj.get("displayName") or pid
     description = obj.get("description") or obj.get("summary") or ""
     avatar = obj.get("avatar")
+    hidden = bool(obj.get("hidden", False))  # ★ 支援隱藏人格
     # prompt 鍵位相容（不對外公開，只給 get_system_prompt 用）
     sys_prompt = (
         obj.get("system_prompt")
@@ -120,13 +127,14 @@ def _normalize_persona_item(pid: str, obj: Dict[str, Any]) -> Dict[str, Any]:
         "name": str(name),
         "avatar": avatar,
         "description": str(description) if description else "",
+        "hidden": hidden,                          # ★
         "_system_prompt": str(sys_prompt) if isinstance(sys_prompt, str) else None,
     }
 
 def _normalize_personas(raw: Any) -> Dict[str, Dict[str, Any]]:
     """
     支援兩種來源格式：
-    1) 陣列：[{ id, name/displayName, description/summary, avatar?, system_prompt? }]
+    1) 陣列：[{ id, name/displayName, description/summary, avatar?, system_prompt?, hidden? }]
     2) 物件：{ "<id>": { name/displayName, ... } }
     """
     by_id: Dict[str, Dict[str, Any]] = {}
@@ -166,7 +174,7 @@ def _load_personas_from_files() -> Tuple[Dict[str, Dict[str, Any]], Optional[str
 def _merge_with_fallback(meta_by_id: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """
     將檔案載入的結果與內建後援合併：
-    - 名稱/描述/頭像缺漏者由 FALLBACK_META 填上
+    - 名稱/描述/頭像/hidden 缺漏者由 FALLBACK_META 填上（hidden 預設 False）
     - system prompt 缺漏者由 PERSONAS 填上
     """
     all_ids = set(meta_by_id.keys()) | set(FALLBACK_META.keys()) | set(PERSONAS.keys())
@@ -179,9 +187,10 @@ def _merge_with_fallback(meta_by_id: Dict[str, Dict[str, Any]]) -> Dict[str, Dic
             "name": (file_meta.get("name") or fb_meta.get("name") or pid),
             "avatar": file_meta.get("avatar") or fb_meta.get("avatar"),
             "description": file_meta.get("description") or fb_meta.get("description") or "",
+            "hidden": bool(file_meta.get("hidden", False)),  # fallback 預設 False
             "_system_prompt": (
                 file_meta.get("_system_prompt")
-                or PERSONAS.get(pid)  # 以原始檔內建 prompt 作為最後保底
+                or PERSONAS.get(pid)  # 以內建 prompt 作為最後保底
             ),
         }
     return merged
@@ -207,18 +216,27 @@ def _load_personas_cached() -> Dict[str, Dict[str, Any]]:
     return merged
 
 # ----------------------------------------------
-# 對外 API
+# 對外 API（含 UI 用清單、系統提示、預設 id）
 # ----------------------------------------------
-def get_personas() -> List[Dict[str, Any]]:
+def get_personas(include_hidden: bool = False) -> List[Dict[str, Any]]:
     """
     回傳 persona 清單（不含 system prompt）：
     [{ id, name, avatar, description }]
+    預設排除 hidden；如要在後台顯示，可傳 include_hidden=True。
     """
     data = _load_personas_cached()
+    rows = list(data.values())
+
+    # 排除 hidden（預設）
+    if not include_hidden:
+        rows = [r for r in rows if not r.get("hidden")]
+
     # 排序：預設 persona 優先，其餘依名稱
     def sort_key(x: Dict[str, Any]) -> tuple:
-        return (0 if x["id"] == DEFAULT_PERSONA_ID else 1, x["name"])
-    rows = sorted(data.values(), key=sort_key)
+        return (0 if x["id"] == get_default_persona_id() else 1, x["name"])
+
+    rows = sorted(rows, key=sort_key)
+
     # 過濾內部欄位
     return [
         {"id": r["id"], "name": r["name"], "avatar": r["avatar"], "description": r["description"]}
@@ -273,10 +291,52 @@ def get_system_prompt(persona_id: Optional[str]) -> str:
 def get_persona_prompt(persona_id: Optional[str]) -> str:
     return get_system_prompt(persona_id)
 
+# ----------------------------------------------
+# 密語（Secret Phrase）→ persona 解析
+# ----------------------------------------------
+# 你可以在 personas.json 中新增「隱藏人格」：
+# { "id": "senpai_producer", "name": "製片學長", "hidden": true, "system_prompt": "……" }
+# 然後在這裡綁定密語到該 id（正則不分大小寫）
+SECRET_PHRASE_PATTERNS: List[Tuple[re.Pattern[str], str]] = [
+    # 範例：輸入「curator+」或「神秘策展」會切到（隱藏的）weekend_curator_plus（需在 personas.json 先定義 hidden 條目）
+    (re.compile(r"\bcurator\+\b", re.I), "weekend_curator_plus"),
+    (re.compile(r"神秘策展"), "weekend_curator_plus"),
+
+    # 也可把密語綁到既有 persona（測試用）
+    # (re.compile(r"\bguide\s*mode\b", re.I), "starter_guide"),
+]
+
+def resolve_persona_id(preferred_id: Optional[str], user_text: Optional[str]) -> str:
+    """
+    依序決定 persona：
+    1) 若 user_text 觸發任一密語，且該 persona 存在（可為 hidden），採用它
+    2) 否則若 preferred_id 合法，採用之
+    3) 否則使用預設 persona
+    """
+    data = _load_personas_cached()
+
+    # 1) 密語優先
+    if user_text:
+        for pat, pid in SECRET_PHRASE_PATTERNS:
+            try:
+                if pat.search(user_text or "") and pid in data:
+                    return pid
+            except re.error:
+                # 正則寫錯時忽略該條
+                continue
+
+    # 2) 前端傳來的 personaId（必須存在且非空）
+    if preferred_id and preferred_id in data:
+        return preferred_id
+
+    # 3) 預設
+    return get_default_persona_id()
+
 __all__ = [
     "get_personas",
     "get_persona",
     "get_default_persona_id",
     "get_system_prompt",
     "get_persona_prompt",
+    "resolve_persona_id",         # ★ 新增
 ]
