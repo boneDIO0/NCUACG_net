@@ -1,16 +1,23 @@
-﻿/*這個是用來測試登入狀態的，等接後端時會修改或刪除*/ 
-import { createContext, useState, useContext } from 'react';
+﻿// AuthContext.tsx
+import { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import axios from 'axios';
+
 interface User {
   id: number;
   username: string;
-  role: 'admin' | 'member' | 'guest';
+  role: 'superadmin' | 'admin' | 'member' | 'guest';
+  profile?: {
+    fullname?: string;
+    avatarUrl?: string;
+    birthday?: string;
+  };
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -19,25 +26,45 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = (userData: User) => {
-    setUser(userData);
-  };
+  // App 初始化時檢查是否已登入
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
+          withCredentials: true,
+        });
+        setUser(res.data);
+      } catch {
+        setUser(null);
+      }
+    };
+    fetchProfile();
+  }, []);
 
-  const logout = () => {
+  const logout = async () => {
     if (window.confirm('確定要登出嗎？')) {
-      alert('您已成功登出');
-      setUser(null);
+      try {
+        await axios.post(
+          'http://127.0.0.1:8000/api/logout/',
+          {},
+          { withCredentials: true }
+        );
+      } catch {
+        // 後端沒做 logout 也沒關係
+      } finally {
+        setUser(null);
+        alert('您已成功登出');
+      }
     }
-    
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        login,
+        setUser,
         logout,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
       }}
     >
       {children}
@@ -52,3 +79,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export type { User };

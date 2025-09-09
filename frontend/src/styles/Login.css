@@ -34,6 +34,9 @@
   font-size: 16px;
   border-radius: 5px;
   border: 1px solid #ccc;
+  width: 100%;
+  padding-right: 40px; /* 給眼睛按鈕留空間 */
+  box-sizing: border-box;
 }
 
 .errorText {
@@ -49,8 +52,21 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  
 }
-
+.toggle-btn {
+  position: relative;
+  left: -40px;  /* 往左推進去輸入框 */
+  top: 6px;     /* 微調垂直位置 */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
 /* 輔助連結區塊 */
 .outercontainer a {
   display: inline-block;
@@ -62,7 +78,10 @@
 .outercontainer a:hover {
   text-decoration: underline;
 }
-
+.portal_submit_btn{
+  opacity: 0.6;
+  pointer-events: none;
+}
 @media (max-width: 768px) {
   .submitForm-container {
     width: 95vw;

@@ -13,11 +13,40 @@ from rest_framework import status
 from captcha.models import CaptchaStore
 from captcha.helpers import captcha_image_url
 from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from .authentication import CookieJWTAuthentication  # <-- 引入自訂的
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .verifyemail import generate_verification_token, send_verification_email
 import os
+
+
+class UserProfileView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # 判斷角色
+        role = "member"
+        if getattr(user, "is_superadmin", False):
+            role = "superadmin"
+        elif getattr(user, "is_admin", False):
+            role = "admin"
+
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "role": role,
+            "profile": {
+                "fullname": getattr(user, "fullname", ""),
+                "avatarUrl": getattr(user, "avatar_url", ""),
+                "birthday": getattr(user, "birthday", "")
+            }
+        }, status=200)
 
 class GetCaptcha(APIView):
     def get(self, request):
@@ -48,7 +77,8 @@ class LoginView(APIView):
         # 驗證帳密
         user = User.objects.filter(email=useremail).first()
         cred = Credential.objects.filter(user=user).first()
-
+        if not user.is_active:
+            return Response({"error": "你尚未驗證email"}, status=status.HTTP_400_BAD_REQUEST)
         if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
             # 驗證成功，更新 last_login
             cred.last_login = timezone.now()
@@ -59,8 +89,8 @@ class LoginView(APIView):
         # 登入成功 → 發 JWT
         refresh = RefreshToken.for_user(user)
         response = Response({"message": "Login success"})
-        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=True, samesite="Strict")
-        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=True, samesite="Strict")
+        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=False, samesite="None")# 本地開發secure=False samesite改lax 上線後更改回True和Strict
+        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=False, samesite="None")
         return response
 
 
