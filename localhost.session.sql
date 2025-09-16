@@ -1,1 +1,1 @@
-﻿
+﻿SELECT * from accounts_user;

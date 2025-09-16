@@ -288,9 +288,6 @@ const menuOptions: Option[] = [
                     >
                       登出
                     </motion.button>
-                    <p style={{ fontSize: '14px', color: '#555', marginTop: '10px' }}>
-                      ciallo~(∠・ω&lt; )⌒☆，{user?.username}
-                    </p>
                   </>
                 ) : (
                   <motion.button

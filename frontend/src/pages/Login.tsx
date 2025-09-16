@@ -48,18 +48,22 @@ export default function Login() {
         password,
         captcha_key: captcha?.captcha_key,
         captcha_value: captchaInput
-      },
-      { withCredentials: true }
+      }
     );
     setMessage(loginRes.data.message);
-
     // 成功 → 抓 /api/me/ 更新 Context
+     localStorage.setItem('accessToken', loginRes.data.access);
+     localStorage.setItem('refreshToken', loginRes.data.refresh);
+     
     const meRes = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
-      withCredentials: true
+      headers: {
+                Authorization: `Bearer ${loginRes.data.access}`
+           }
     });
     setUser(meRes.data);
   } catch (err: any) {
     setMessage(err.response?.data?.message || '發生錯誤');
+    console.log(err.response?.data?.message)
   }
   }
   const [showPassword, setShowPassword] = useState(false);

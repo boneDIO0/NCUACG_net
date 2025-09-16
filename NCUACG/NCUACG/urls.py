@@ -17,7 +17,7 @@ Including another URLconf
 # NCUACG/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import LoginView, LogoutView, RegisterView, GetCaptcha, CSRFTokenView, VerifyRegistrationView,UserProfileView
+from accounts.views import LoginView, LogoutView, RegisterView, GetCaptcha,  VerifyRegistrationView,UserProfileView
 
 urlpatterns = [
     path("api/get-captcha/", GetCaptcha.as_view(), name="get_captcha"),
@@ -28,7 +28,6 @@ urlpatterns = [
     path("api/assistant/", include("assistant.urls")),
     path('api/register/', RegisterView.as_view(), name='register_user'),
     path('api/captcha/', include('captcha.urls')),
-    path("api/csrf-token/", CSRFTokenView.as_view(), name="csrf_token"),
     path("api/verify-registration/", VerifyRegistrationView.as_view(), name="verify_registration"),
     path('api/me/', UserProfileView.as_view(), name='me'),
 ]

@@ -7,11 +7,6 @@ interface User {
   id: number;
   username: string;
   role: 'superadmin' | 'admin' | 'member' | 'guest';
-  profile?: {
-    fullname?: string;
-    avatarUrl?: string;
-    birthday?: string;
-  };
 }
 
 interface AuthContextType {

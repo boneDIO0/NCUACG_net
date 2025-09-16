@@ -1,6 +1,7 @@
 ﻿node_modules會跟著傳到Github，你電腦只要載node.js就能用。
 但可撥的是Python沒辦法，需要自己pip install模組。
 下列為需要自行安裝的模組:
+# 直接在NCUACG_NET目錄開啟CMD並輸入install_modules.bat即可
 
 django-cors-headers==4.7.0
 django-simple-captcha==0.6.2
@@ -13,6 +14,7 @@ sentence_transformers
 tf-keras
 psycopg2-binary
 bcrypt
+
 
 # RAG 本地嵌入
 sentence-transformers>=2.7.0

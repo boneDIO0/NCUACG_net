@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
+from rest_framework_simplejwt.views import TokenObtainPairView
 import bcrypt
 from accounts.models import User, Credential, VerificationToken
 from django.db import transaction
@@ -16,21 +16,23 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from .authentication import CookieJWTAuthentication  # <-- 引入自訂的
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .verifyemail import generate_verification_token, send_verification_email
 import os
+import logging
 
+logger = logging.getLogger(__name__)
 
 class UserProfileView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+
+    permission_classes = [IsAuthenticated]  # 必須登入
+    # authentication_classes 不用設定，會用 settings 裡的 SimpleJWT
 
     def get(self, request):
-        user = request.user
+        user = request.user  # 這裡就是 SimpleJWT 解析 token 後的 user
+        logger.info(f"Fetching profile for user: {user.username if user else 'Anonymous'}")
 
-        # 判斷角色
         role = "member"
         if getattr(user, "is_superadmin", False):
             role = "superadmin"
@@ -41,11 +43,6 @@ class UserProfileView(APIView):
             "id": user.id,
             "username": user.username,
             "role": role,
-            "profile": {
-                "fullname": getattr(user, "fullname", ""),
-                "avatarUrl": getattr(user, "avatar_url", ""),
-                "birthday": getattr(user, "birthday", "")
-            }
         }, status=200)
 
 class GetCaptcha(APIView):
@@ -81,24 +78,24 @@ class LoginView(APIView):
             return Response({"error": "你尚未驗證email"}, status=status.HTTP_400_BAD_REQUEST)
         if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
             # 驗證成功，更新 last_login
-            cred.last_login = timezone.now()
-            cred.save()
+            with transaction.atomic():
+                user.last_login = timezone.now()
+                user.save()
         else:
             return Response({"error": "Invalid useremail or password"}, status=status.HTTP_400_BAD_REQUEST)
+         # 使用 Simple JWT 提供的驗證方法來獲取 token
+        # 這裡我們傳入已經驗證過的用戶
+        refresh_token = RefreshToken.for_user(user)
+        access_token = str(refresh_token.access_token)
+        refresh_token_str = str(refresh_token)
+        logger.info(f"User '{user.name}' logged in successfully.")
 
-        # 登入成功 → 發 JWT
-        refresh = RefreshToken.for_user(user)
-        response = Response({"message": "Login success"})
-        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=False, samesite="None")# 本地開發secure=False samesite改lax 上線後更改回True和Strict
-        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=False, samesite="None")
-        return response
+        return Response({
+            "message": "Login success",
+            "access": access_token,
+            "refresh": refresh_token_str # refresh token 通常需要前端儲存並用於刷新 access token
+        }, status=status.HTTP_200_OK)
 
-
-@method_decorator(ensure_csrf_cookie, name='dispatch')
-class CSRFTokenView(APIView):
-    def get(self, request, *args, **kwargs):
-        return Response({"message": "CSRF cookie set"})
-    
 
 class LogoutView(APIView):
     def post(self, request):
