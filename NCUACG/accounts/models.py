@@ -10,17 +10,17 @@ class User(models.Model):
     is_admin = models.BooleanField(default=False)
     is_super_admin = models.BooleanField(default=False)
     last_login = models.DateTimeField(blank=True, null=True)
+    is_authenticated=models.BooleanField(default=False)
     def __str__(self):
         return f"{self.name} ({self.email})"
 
 
 class Credential(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='credential')
-    username = models.CharField(max_length=50, unique=True)
     password_hash = models.CharField(max_length=256)
 
     def __str__(self):
-        return f"{self.username} (user_id={self.user.id})"
+        return f"(user_id={self.user.id})"
 
 
 class VerificationToken(models.Model):

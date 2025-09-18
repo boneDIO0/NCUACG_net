@@ -65,6 +65,17 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "accept",
+    "origin",
+    "user-agent",
+    "dnt",
+    "cache-control",
+    "x-requested-with",
+    "x-csrftoken",
+]
 CORS_ALLOW_CREDENTIALS = True
 ROOT_URLCONF = 'NCUACG.urls'
 
@@ -74,14 +85,20 @@ REST_FRAMEWORK = {
     ),
 }
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60), # 存取 token 有效時間
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),   # 重新整理 token 有效時間
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
-    "VERIFY_SIGNATURE": True,
-    # ... 其他 SimpleJWT 設定 ...
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    
+    # 🔑 關鍵設定：告訴 SimpleJWT 用 payload 中的 'id' 欄位
+    'USER_ID_FIELD': 'id',      # Django User model 的 PK 欄位名
+    'USER_ID_CLAIM': 'id',      # JWT payload 中的欄位名
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
 }
 TEMPLATES = [
     {

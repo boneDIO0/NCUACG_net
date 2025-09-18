@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import generics
 import bcrypt
 from accounts.models import User, Credential, VerificationToken
 from django.db import transaction
@@ -21,29 +22,55 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .verifyemail import generate_verification_token, send_verification_email
 import os
 import logging
-
+from accounts.serializers import RegisterSerializer,LoginSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
+import traceback
+from accounts.tokentest import JWTtest
+import jwt
+from django.conf import settings
+from rest_framework_simplejwt.exceptions import InvalidToken  # ←這裡
+from rest_framework.exceptions import AuthenticationFailed    # ←這裡
 logger = logging.getLogger(__name__)
+class CustomJWTAuthentication(JWTAuthentication):
+    def get_user(self, validated_token):
+        try:
+            user_id = validated_token['user_id']
+        except KeyError:
+            raise InvalidToken('Token contained no recognizable user identification')
 
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise AuthenticationFailed('User not found', code='user_not_found')
+
+        return user
 class UserProfileView(APIView):
-
-    permission_classes = [IsAuthenticated]  # 必須登入
-    # authentication_classes 不用設定，會用 settings 裡的 SimpleJWT
+    authentication_classes = [CustomJWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user  # 這裡就是 SimpleJWT 解析 token 後的 user
-        logger.info(f"Fetching profile for user: {user.username if user else 'Anonymous'}")
+        try:
+            user = request.user  # 這裡會是 CustomJWTAuthentication 回傳的 User
 
-        role = "member"
-        if getattr(user, "is_superadmin", False):
-            role = "superadmin"
-        elif getattr(user, "is_admin", False):
-            role = "admin"
+            role = "member"
+            if getattr(user, "is_super_admin", False):
+                role = "superadmin"
+            elif getattr(user, "is_admin", False):
+                role = "admin"
 
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "role": role,
-        }, status=200)
+            response_data = {
+                "id": user.id,
+                "username": getattr(user, "name", ""),  # 你的 User 是用 name
+                "role": role,
+            }
+
+            print(f"✅ 成功回傳資料: {response_data}")
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": "取得個人資料時發生錯誤"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GetCaptcha(APIView):
     def get(self, request):
@@ -55,46 +82,28 @@ class GetCaptcha(APIView):
         })
 
 
-class LoginView(APIView):
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
     def post(self, request):
-        useremail = request.data.get("useremail")
-        password = request.data.get("password")
-        captcha_key = request.data.get("captcha_key")
-        captcha_value = request.data.get("captcha_value")
-
-        # 驗證 Captcha
         try:
-            captcha_obj = CaptchaStore.objects.get(hashkey=captcha_key)
-        except CaptchaStore.DoesNotExist:
-            return Response({"error": "Captcha expired"}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data["user"]
+            access_token = serializer.validated_data["access"]
+            refresh_token = serializer.validated_data["refresh"]
 
-        if captcha_obj.response != captcha_value.lower():
-            return Response({"error": "Invalid Captcha"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 驗證帳密
-        user = User.objects.filter(email=useremail).first()
-        cred = Credential.objects.filter(user=user).first()
-        if not user.is_active:
-            return Response({"error": "你尚未驗證email"}, status=status.HTTP_400_BAD_REQUEST)
-        if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
-            # 驗證成功，更新 last_login
-            with transaction.atomic():
-                user.last_login = timezone.now()
-                user.save()
-        else:
-            return Response({"error": "Invalid useremail or password"}, status=status.HTTP_400_BAD_REQUEST)
-         # 使用 Simple JWT 提供的驗證方法來獲取 token
-        # 這裡我們傳入已經驗證過的用戶
-        refresh_token = RefreshToken.for_user(user)
-        access_token = str(refresh_token.access_token)
-        refresh_token_str = str(refresh_token)
-        logger.info(f"User '{user.name}' logged in successfully.")
-
-        return Response({
-            "message": "Login success",
-            "access": access_token,
-            "refresh": refresh_token_str # refresh token 通常需要前端儲存並用於刷新 access token
-        }, status=status.HTTP_200_OK)
+            logger.info(f"User '{user.name}' logged in successfully.")
+            
+            return Response({
+                "message": "Login success",
+                "access": access_token,
+                "refresh": refresh_token
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(logger.error(traceback.format_exc()))
+            return Response({
+                "message": str(e),
+            }, status=400)
 
 
 class LogoutView(APIView):
@@ -105,44 +114,14 @@ class LogoutView(APIView):
         return response
 
 
-class RegisterView(APIView):
-    def post(self, request):
-        try:
-            username = request.data.get("username")
-            email = request.data.get("useremail")
-            password = request.data.get("password")
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
 
-            if User.objects.filter(email=email).exists():
-                return Response({'message': '此 Email 已註冊過'}, status=400)
-            if User.objects.filter(name=username).exists():
-                return Response({'message': '此名字已被使用'}, status=400)
-
-            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-            with transaction.atomic():
-                # 建立未啟用的帳號
-                user = User.objects.create(
-                    name=username,
-                    email=email,
-                    is_active=False
-                )
-                Credential.objects.create(
-                    username=username,
-                    password_hash=hashed.decode('utf-8'),
-                    user=user
-                )
-
-                # 建立驗證 token
-                token = generate_verification_token()
-                VerificationToken.objects.create(user=user, token=token)
-
-                # 發送驗證信
-                send_verification_email(email, token)
-
-            return Response({'message': '註冊成功，請查收驗證信'}, status=201)
-
-        except Exception as e:
-            return Response({'message': f'註冊失敗: {str(e)}'}, status=400)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()  # 呼叫 create()
+        return Response({'message': '註冊成功，請查收驗證信'}, status=status.HTTP_201_CREATED)
         
 
 class VerifyRegistrationView(APIView):

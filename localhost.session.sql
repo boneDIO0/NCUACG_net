@@ -1,1 +1,1 @@
-﻿SELECT * from accounts_user;
+﻿DELETE from accounts_user;

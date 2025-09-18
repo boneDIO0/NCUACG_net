@@ -25,6 +25,7 @@ export default function Login() {
       const res = await axios.get<CaptchaResponse>("http://127.0.0.1:8000/api/get-captcha/");
       setCaptcha(res.data);
       setCaptchaInput('');
+      console.log(res.data)
     } catch (err) {
       console.error("Failed to load captcha:", err);
     }
@@ -51,13 +52,18 @@ export default function Login() {
       }
     );
     setMessage(loginRes.data.message);
+    const accessToken = loginRes.data.access;
+    const refreshToken = loginRes.data.refresh;
+
+    // 存起來，key 要自己決定統一名稱
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
     // 成功 → 抓 /api/me/ 更新 Context
-     localStorage.setItem('accessToken', loginRes.data.access);
-     localStorage.setItem('refreshToken', loginRes.data.refresh);
      
-    const meRes = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
+     const token = localStorage.getItem('accessToken');
+     const meRes = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
       headers: {
-                Authorization: `Bearer ${loginRes.data.access}`
+                Authorization: `Bearer ${token}`
            }
     });
     setUser(meRes.data);
