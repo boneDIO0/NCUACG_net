@@ -9,6 +9,7 @@ type Persona = {
   displayName?: string;
   description?: string;
   avatar?: string;
+  hidden?: boolean; // ★ 新增：前端可見性
 };
 
 type Props = {
@@ -18,19 +19,40 @@ type Props = {
 export default function PersonaSwitch({ showLabel = true }: Props) {
   const { personaId, setPersonaId } = useChatContext();
 
-  // 整理成 {id, name} 清單；name 以 displayName 優先
-  const personas = useMemo(
-    () =>
-      ((personasJson as Persona[]) ?? []).map((p) => ({
-        id: p.id,
-        name: p.displayName || p.name || p.id,
-        description: p.description ?? '',
-      })),
+  // 原始清單（保留 hidden 資訊以便判斷目前是否為隱藏 persona）
+  const rawList: Persona[] = useMemo(
+    () => (personasJson as Persona[]) ?? [],
     []
   );
 
-  // 當前值：若 context 尚未設定，用第一個當預設
-  const currentId = personaId || personas[0]?.id || '';
+  // 只顯示「非隱藏」的 personas（下拉清單可見）
+  const visible = useMemo(
+    () =>
+      rawList
+        .filter((p) => !p.hidden)
+        .map((p) => ({
+          id: p.id,
+          name: p.displayName || p.name || p.id,
+          description: p.description ?? '',
+        })),
+    [rawList]
+  );
+
+  // 目前選中的 id：若 context 尚未設定，用第一個可見項目當預設
+  const currentId = personaId || visible[0]?.id || '';
+
+  // 當前是否為「隱藏 persona」（例如透過密語啟用）
+  const isHiddenActive = useMemo(() => {
+    if (!currentId) return false;
+    const inVisible = visible.some((p) => p.id === currentId);
+    return !inVisible && rawList.some((p) => p.id === currentId);
+  }, [currentId, visible, rawList]);
+
+  // 取得目前（可能為隱藏）persona 的顯示名稱
+  const currentLabel =
+    rawList.find((p) => p.id === currentId)?.displayName ||
+    rawList.find((p) => p.id === currentId)?.name ||
+    currentId;
 
   return (
     <div className="persona-switch" role="group" aria-label="AI 角色切換">
@@ -47,7 +69,14 @@ export default function PersonaSwitch({ showLabel = true }: Props) {
         onChange={(e) => setPersonaId(e.target.value)}
         aria-label="選擇 AI 助理角色"
       >
-        {personas.map((p) => (
+        {/* 若目前為隱藏 persona，就在頂端放一個唯讀展示用的 option，避免 value 不在 options 的警告 */}
+        {isHiddenActive && (
+          <option value={currentId} disabled>
+            {currentLabel}（隱藏）
+          </option>
+        )}
+
+        {visible.map((p) => (
           <option key={p.id} value={p.id} title={p.description}>
             {p.name}
           </option>

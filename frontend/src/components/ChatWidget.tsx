@@ -1,3 +1,4 @@
+// frontend/src/components/ChatWidget.tsx
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import { useChatContext } from '../contexts/ChatContext'; // 與頁面共用同一份 messages
@@ -19,7 +20,7 @@ export default function ChatWidget() {
   const { messages } = useChatContext();
 
   // personas 映射表（id -> 顯示名稱）
-  const personas = useMemo(() => (personasJson as Persona[]) ?? [], []);
+  const personas = useMemo(() => (Array.isArray(personasJson) ? personasJson as Persona[] : Object.values(personasJson as Record<string, Persona>)), []);
   const getPersonaName = (id?: string | null) => {
     if (!id) return '';
     const p = personas.find(x => x.id === id);
@@ -44,18 +45,27 @@ export default function ChatWidget() {
     return () => window.removeEventListener('persona:change', onChange as EventListener);
   }, []);
 
-  // --- 樣式：固定在右下角 ---
+  // 開啟面板時鎖住 body 捲動（行動裝置更穩）
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = open ? 'hidden' : prev || '';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  // --- 樣式：固定在左下角 ---
   const basePanelStyle: CSSProperties = {
     position: 'fixed',
     bottom: '96px',
-    right: '24px',
+    left: '24px',
     width: '360px',
-    height: '520px', // 稍增高度，留出標頭空間
+    height: '520px',
     background: '#fff',
     borderRadius: '12px',
     boxShadow: '0 8px 20px rgba(0,0,0,.25)',
     zIndex: 1000,
-    overflow: 'hidden',
+    overflow: 'hidden',               // 外層不捲動，內層處理
+    display: 'flex',                  // 子層用 flex 取得可捲高度
+    flexDirection: 'column',
     transition: 'opacity .2s ease, transform .2s ease',
   };
   const visibleStyle: CSSProperties = {
@@ -93,9 +103,6 @@ export default function ChatWidget() {
     fontWeight: 600,
   };
 
-  // （可選）簡易未讀：只要有助理訊息且面板關閉就顯示
-  const hasUnread = !open && messages.some((m) => m.role === 'assistant');
-
   return (
     <>
       {/* 浮動開關按鈕 */}
@@ -107,7 +114,7 @@ export default function ChatWidget() {
         style={{
           position: 'fixed',
           bottom: '24px',
-          right: '24px',
+          left: '24px',
           width: '56px',
           height: '56px',
           borderRadius: '50%',
@@ -122,21 +129,6 @@ export default function ChatWidget() {
         title={open ? '收合助理' : '開啟助理'}
       >
         💬
-        {hasUnread && (
-          <span
-            aria-hidden
-            style={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: '#ff4d4f',
-              boxShadow: '0 0 0 2px rgba(255,255,255,.9) inset',
-            }}
-          />
-        )}
       </button>
 
       {/* 面板：永遠掛載，用樣式切換可見性（保留對話狀態） */}
@@ -146,8 +138,9 @@ export default function ChatWidget() {
           ...basePanelStyle,
           ...(open ? visibleStyle : hiddenStyle),
         }}
+        // 若 @types/react 過舊可把 overscroll-behavior 放到 CSS 類別
       >
-        {/* 標頭：顯示當前 persona 名稱；實際切換在面板內的 PersonaSwitch */}
+        {/* 標頭：顯示當前 persona 名稱 */}
         <div style={headerStyle}>
           <strong>社網 AI 助理</strong>
           <span style={pillStyle} title="於面板內可切換角色">
