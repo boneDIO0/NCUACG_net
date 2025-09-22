@@ -6,7 +6,7 @@ import Signup from './pages/Signup';
 import ForgetPwd from './pages/ForgetPwd';
 import Announcement from './pages/Announcement';
 import Club from './pages/Club';
-
+import Works from './pages/Works';
 // 共用 Context
 import { AuthProvider } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
@@ -35,8 +35,10 @@ export default function App() {
               <Route path="/forget-password" element={<ForgetPwd />} />
               <Route path="/announcement" element={<Announcement />} />
               <Route path="/club" element={< Club/>} />
+              <Route path="/club/works" element={<Works/>}/> {/*這裡先用模擬資料 之後要根據點選的社課種類更換 */}
               {/* --- AI 助理聊天頁 --- */}
               <Route path="/assistant" element={<AssistantChat />} />
+              
             </Routes>
           </AuthProvider>
         </main>

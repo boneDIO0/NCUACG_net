@@ -1,39 +1,101 @@
-﻿import { useState } from 'react';
+﻿import { useState ,useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import type { User } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
 import '../styles/Login.css';
+
+interface CaptchaResponse {
+  captcha_key: string;
+  captcha_image_url: string;
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [useremail, setUseremail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
+  const { setUser } = useAuth(); // 從 Context 取得 setUser
   const [message, setMessage] = useState('')
-const handleLogin = async (e: React.FormEvent) => {
+  const [captcha, setCaptcha] = useState<CaptchaResponse | null>(null);
+  const [captchaInput, setCaptchaInput] = useState(''); // 使用者輸入
+  const loadCaptcha = async () => {
+    try {
+      const res = await axios.get<CaptchaResponse>("http://127.0.0.1:8000/api/get-captcha/");
+      setCaptcha(res.data);
+      setCaptchaInput('');
+      console.log(res.data)
+    } catch (err) {
+      console.error("Failed to load captcha:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadCaptcha();
+  }, []);
+  const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!useremail || !password){
       setMessage("你的帳號密碼咧?");
       return;
     }
-    await axios.post('http://localhost:8000/api/login/', {
-        useremail:useremail,
-        password:password
-      }, { withCredentials: true }).then(res => {
-        setMessage(res.data.message)
-      })
-      .catch(err => {
-       setMessage(err.response?.data?.message || '發生錯誤')
-    }); 
-  }
+   try {
+    // 登入
+    const loginRes = await axios.post(
+      'http://localhost:8000/api/login/',
+      {
+        useremail,
+        password,
+        captcha_key: captcha?.captcha_key,
+        captcha_value: captchaInput
+      }
+    );
+    setMessage(loginRes.data.message);
+    const accessToken = loginRes.data.access;
+    const refreshToken = loginRes.data.refresh;
 
+    // 存起來，key 要自己決定統一名稱
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    // 成功 → 抓 /api/me/ 更新 Context
+     
+     const token = localStorage.getItem('accessToken');
+     const meRes = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
+      headers: {
+                Authorization: `Bearer ${token}`
+           }
+    });
+    setUser(meRes.data);
+  } catch (err: any) {
+    setMessage(err.response?.data?.message || '發生錯誤');
+    console.log(err.response?.data?.message)
+  }
+  }
+  const [showPassword, setShowPassword] = useState(false);
   return (
 
   <div className='outercontainer'>
   
   <div className='submitForm-container'>
   <h2 className='loginText'>登入</h2>
+   {captcha ? (
+        <div>
+          <img
+            src={captcha.captcha_image_url}
+            alt="captcha"
+            className="border rounded"
+          />
+          <button
+            onClick={loadCaptcha}
+            className="ml-2 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Refresh
+          </button>
+        </div>
+      ) : (
+        <p>Loading captcha...</p>
+      )}
   <form onSubmit={handleLogin} >
     <input
       className='accountTextField'
@@ -44,11 +106,29 @@ const handleLogin = async (e: React.FormEvent) => {
     />
     <input
       className='passwordTextField'
-      type="password"
+      type={showPassword ? "text" : "password"}
       placeholder="密碼"
       value={password}
       onChange={(e) => setPassword(e.target.value)}
     />
+    <input
+      className='accountTextField'
+      type="text"
+      placeholder="驗證碼"
+      value={captchaInput}
+      onChange={(e) => setCaptchaInput(e.target.value)}
+    />
+    <button
+        type="button"
+        className="toggle-btn"
+        onClick={() => setShowPassword(!showPassword)}
+      >
+        <img
+          src={showPassword ?  "/images/eye.png":"/images/eye_off.png"}
+          alt="toggle password"
+          className="eye-icon"
+        />
+      </button>
     {error && <div className='errorText'>{error}</div>}
     <p>{message}</p>
     <button className='submitButton' type="submit">登入</button>
@@ -63,7 +143,7 @@ const handleLogin = async (e: React.FormEvent) => {
 
   <div>
     <p>其他登入方式</p>
-    <button>portal 登入</button>
+    <button className='portal_submit_btn'>portal 登入</button>
   </div>
 </div>
   <Sidebar />

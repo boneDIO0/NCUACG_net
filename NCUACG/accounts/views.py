@@ -2,9 +2,10 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import generics
 import bcrypt
-from accounts.models import User, Credential
+from accounts.models import User, Credential, VerificationToken
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -13,7 +14,63 @@ from rest_framework import status
 from captcha.models import CaptchaStore
 from captcha.helpers import captcha_image_url
 from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from .verifyemail import generate_verification_token, send_verification_email
+import os
+import logging
+from accounts.serializers import RegisterSerializer,LoginSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
+import traceback
+from accounts.tokentest import JWTtest
+import jwt
+from django.conf import settings
+from rest_framework_simplejwt.exceptions import InvalidToken  # ←這裡
+from rest_framework.exceptions import AuthenticationFailed    # ←這裡
+logger = logging.getLogger(__name__)
+class CustomJWTAuthentication(JWTAuthentication):
+    def get_user(self, validated_token):
+        try:
+            user_id = validated_token['user_id']
+        except KeyError:
+            raise InvalidToken('Token contained no recognizable user identification')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise AuthenticationFailed('User not found', code='user_not_found')
+
+        return user
+class UserProfileView(APIView):
+    authentication_classes = [CustomJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user = request.user  # 這裡會是 CustomJWTAuthentication 回傳的 User
+
+            role = "member"
+            if getattr(user, "is_super_admin", False):
+                role = "superadmin"
+            elif getattr(user, "is_admin", False):
+                role = "admin"
+
+            response_data = {
+                "id": user.id,
+                "username": getattr(user, "name", ""),  # 你的 User 是用 name
+                "role": role,
+            }
+
+            print(f"✅ 成功回傳資料: {response_data}")
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": "取得個人資料時發生錯誤"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GetCaptcha(APIView):
     def get(self, request):
@@ -24,74 +81,87 @@ class GetCaptcha(APIView):
             "captcha_image_url": image_url
         })
 
-class LoginView(APIView):
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
     def post(self, request):
-        useremail = request.data.get("useremail")
-        password = request.data.get("password")
-        captcha_key = request.data.get("captcha_key")
-        captcha_value = request.data.get("captcha_value")
-
-        # 驗證 Captcha
         try:
-            captcha_obj = CaptchaStore.objects.get(hashkey=captcha_key)
-        except CaptchaStore.DoesNotExist:
-            return Response({"error": "Captcha expired"}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data["user"]
+            access_token = serializer.validated_data["access"]
+            refresh_token = serializer.validated_data["refresh"]
 
-        if captcha_obj.response != captcha_value.lower():
-            return Response({"error": "Invalid Captcha"}, status=status.HTTP_400_BAD_REQUEST)
+            logger.info(f"User '{user.name}' logged in successfully.")
+            
+            return Response({
+                "message": "Login success",
+                "access": access_token,
+                "refresh": refresh_token
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(logger.error(traceback.format_exc()))
+            return Response({
+                "message": str(e),
+            }, status=400)
 
-        # 驗證帳密
-        user = User.objects.filter(email=useremail).first()
-        cred = Credential.objects.filter(user=user).first()
 
-        if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
-            # 驗證成功，更新 last_login
-            cred.last_login = timezone.now()
-            cred.save()
-        else:
-            return Response({"error": "Invalid useremail or password"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 登入成功 → 發 JWT
-        refresh = RefreshToken.for_user(user)
-        response = Response({"message": "Login success"})
-        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=True, samesite="Strict")
-        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=True, samesite="Strict")
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response({'message': '登出成功'})
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
         return response
 
 
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
 
-@csrf_exempt
-def logout_user(request):
-    # 若沒 session/token，後端可以不做事
-    return JsonResponse({'message': '登出成功'}, status=200)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()  # 呼叫 create()
+        return Response({'message': '註冊成功，請查收驗證信'}, status=status.HTTP_201_CREATED)
+        
 
-@csrf_exempt
-def register_user(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data['username']
-            email = data['useremail']
-            password = data['password']
+class VerifyRegistrationView(APIView):
+    def get(self, request):
+        token_value = request.query_params.get("token")
+        token_obj = VerificationToken.objects.filter(token=token_value, is_used=False).first()
 
-            # ✅ 加密密碼
-            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'message': '此 Email 已註冊過'}, status=400)
-            if User.objects.filter(name=username).exists():
-                return JsonResponse({'message': '此名字已被使用'}, status=400)
-            with transaction.atomic():  # 🔐 開啟資料庫交易
-            # ✅ 建立使用者記錄
-                user = User.objects.create(name=username, email=email)
-                Credential.objects.create(
-                    username=username,
-                    password_hash=hashed.decode('utf-8'),
-                    user=user
-                )
+        if not token_obj or token_obj.is_expired():
+            return Response({"error": "驗證連結無效或已過期"}, status=status.HTTP_400_BAD_REQUEST)
 
-            return JsonResponse({'message': '註冊成功'}, status=201)
-        except Exception as e:
-            print(f"錯誤: {e}")
-            return JsonResponse({'message': f'註冊失敗: {str(e)}'}, status=400)
+        # 驗證成功
+        token_obj.is_used = True
+        token_obj.save()
+        token_obj.user.is_active = True
+        token_obj.user.save()
 
-    return JsonResponse({'message': '不支援的請求方法'}, status=405)
+        return Response({"message": "驗證成功，註冊完成"}, status=status.HTTP_200_OK)
+    
+class Super_adminView(APIView):
+    def post(self, request):
+        super_admin_password = request.data.get("super_admin_password")
+        useremail = request.data.get("useremail")
+        password = request.data.get("password")
+        # 超級網管註冊
+        if super_admin_password == os.getenv("super_admin_password"):
+            if not User.objects.filter(is_super_admin=True).exists():
+                user = User.objects.filter(email=useremail).first()
+                cred = Credential.objects.filter(user=user).first()
+                if user:
+                    if bcrypt.checkpw(password.encode('utf-8'), cred.password_hash.encode('utf-8')):
+                        user.is_super_admin = True
+                        user.is_admin = True
+                        user.save()
+                        return Response({"message": "已成功成為網管"}, status=201)
+                    else:
+                        return Response({"error": "用戶密碼錯誤"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"error": "此用戶不存在"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            else:
+                return Response({"error": "已存在超級網管"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "超級網管密碼錯誤"}, status=status.HTTP_400_BAD_REQUEST)
