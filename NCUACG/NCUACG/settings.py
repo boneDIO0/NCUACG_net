@@ -42,14 +42,13 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
-    # 你的 app
+    # 你的 app（改為啟用）
     'accounts',
     'captcha',
-    # 若有 assistant / club / event / home 請在此加入
-    # 'assistant',
-    # 'club',
-    # 'event',
-    # 'home',
+    'assistant',
+    'club',
+    'event',
+    'home',
 ]
 
 MIDDLEWARE = [
@@ -71,6 +70,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # 讓 API 輸出的時間統一用 ISO8601（含時區偏移）
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S%z",
 }
 
 TEMPLATES = [
@@ -112,7 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+
+# ★ 改成台灣時區；仍保留 USE_TZ=True（DB 存 UTC，程式用本地時區進行運算/顯示）
+TIME_ZONE = 'Asia/Taipei'
 USE_I18N = True
 USE_TZ = True
 
@@ -127,8 +130,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 APPEND_SLASH = True
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CORS 設定（只開放助理 API 路徑）
-# 允許的前端來源（開發＋可選的正式域，以環境變數覆蓋）
+# CORS 設定（只開放必要 API 路徑）
 _FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "").strip()
 CORS_ALLOWED_ORIGINS = [o for o in [
     "http://localhost:5173",
@@ -136,13 +138,17 @@ CORS_ALLOWED_ORIGINS = [o for o in [
     _FRONTEND_ORIGIN,
 ] if o]
 
-# 僅套用到 /api/assistant/* 路徑，縮小暴露面
-CORS_URLS_REGEX = r"^/api/assistant/.*$"
+# 僅套用到 /api/assistant/* 與 /api/event/* 路徑，縮小暴露面
+CORS_URLS_REGEX = r"^/api/(assistant|event)/.*$"
 
 # 若需要帶 Cookie / Session
 CORS_ALLOW_CREDENTIALS = True
 
 # 使用 Session/CSRF 時請同步信任前端網域（JWT 可不需）
-CSRF_TRUSTED_ORIGINS = [o.replace("http://", "http://").replace("https://", "https://") for o in CORS_ALLOWED_ORIGINS]
-# （如需僅信任 https 可自行過濾）
+CSRF_TRUSTED_ORIGINS = [
+    o.replace("http://", "http://").replace("https://", "https://") for o in CORS_ALLOWED_ORIGINS
+]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 事件查詢預設視窗（天數）：event/views.py 可以讀此設定做預設過濾（未來 N 天）
+DEFAULT_EVENT_WINDOW_DAYS = int(os.getenv("DEFAULT_EVENT_WINDOW_DAYS", "30"))

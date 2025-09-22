@@ -1,10 +1,11 @@
 // frontend/src/contexts/ChatContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import useChat from '../hooks/useChat';
+import { useChat } from '../hooks/useChat'; // ⬅️ 改成具名匯入
 
-const PERSONA_LS_KEY = 'ncuacg.personaId';
-const PERSONA_EVENT = 'persona:change';
+// ---- 常數（也讓其他元件可引用） ----
+export const PERSONA_LS_KEY = 'ncuacg.personaId';
+export const PERSONA_EVENT = 'persona:change';
 
 // ---- 型別 ----
 type BaseChat = ReturnType<typeof useChat>;
@@ -19,6 +20,7 @@ const ChatCtx = createContext<ChatContextType | null>(null);
 // ---- LocalStorage 安全封裝 ----
 function safeGetLocal(key: string): string | null {
   try {
+    if (typeof window === 'undefined') return null;
     return window.localStorage.getItem(key);
   } catch {
     return null;
@@ -26,6 +28,7 @@ function safeGetLocal(key: string): string | null {
 }
 function safeSetLocal(key: string, val: string) {
   try {
+    if (typeof window === 'undefined') return;
     window.localStorage.setItem(key, val);
   } catch {
     /* ignore */
@@ -49,11 +52,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const setPersonaId = (id: string) => {
     setPersonaIdState(id);
     safeSetLocal(PERSONA_LS_KEY, id);
-    window.dispatchEvent(new CustomEvent(PERSONA_EVENT, { detail: { id } }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(PERSONA_EVENT, { detail: { id } }));
+    }
   };
 
   // 監聽外部（例如 PersonaSwitch）觸發的 persona 變更事件
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.id && detail.id !== personaId) {
@@ -62,7 +69,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     };
     window.addEventListener(PERSONA_EVENT, handler as EventListener);
-    return () => window.removeEventListener(PERSONA_EVENT, handler as EventListener);
+    return () =>
+      window.removeEventListener(PERSONA_EVENT, handler as EventListener);
   }, [personaId]);
 
   // 組合 Context 值（不更動 useChat 的 API）
