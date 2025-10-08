@@ -193,7 +193,7 @@ CORS_ALLOWED_ORIGINS = [o for o in [
 ] if o]
 
 # 只對 /api/assistant/* 與 /api/event/* 套用 CORS，縮小暴露面
-CORS_URLS_REGEX = r"^/api/(assistant|event)/.*$"
+CORS_URLS_REGEX = r"^/api/.*$"
 
 # 若前端需要帶 Cookie/Session
 CORS_ALLOW_CREDENTIALS = True

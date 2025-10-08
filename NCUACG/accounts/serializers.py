@@ -71,7 +71,7 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
     
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     useremail = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)

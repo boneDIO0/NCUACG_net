@@ -1,125 +1,114 @@
 // frontend/src/hooks/useChat.ts
 import { useEffect, useState } from 'react';
 
-/** 對話訊息型別（僅 user / assistant 兩種） */
-export type Role = 'user' | 'assistant';
-export interface ChatMessage {
-  role: Role;
+// —— 型別 —— //
+export type ChatMessage = {
+  role: 'assistant' | 'user';
   text: string;
-}
+};
 
-/** localStorage keys */
-const KEY_MSG = 'ai_chat_history_v1';
-const KEY_PERSONA = 'ai_chat_persona_v1';
+// —— LocalStorage Keys（與 ChatContext 保持一致；避免循環依賴這裡自行宣告常數） —— //
+const CHAT_LS_KEY = 'ncuacg.chat.history.v1';
+const PERSONA_LS_KEY = 'ncuacg.personaId';
 
-/** 後端 API 路徑（相對於同網域） */
-const CHAT_API = '/api/assistant/chat/';
+// —— API base：允許在 .env.development 設定 VITE_API_BASE（預設空字串相對路徑） —— //
+const API_BASE = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_API_BASE) || '';
+const CHAT_ENDPOINT = `${API_BASE}/api/assistant/chat/`;
 
-/**
- * 全域聊天 hook：
- * - 保留訊息於 state + localStorage
- * - 每次送出會把目前 personaId 一起帶給後端
- * - 後端若回傳 personaUsed（密語觸發或切換），會更新 activePersona 並持久化
- */
+// —— Hook 主體 —— //
 export function useChat() {
-  // 1) 歷史訊息（載入/保存 localStorage）
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const raw = localStorage.getItem(KEY_MSG);
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(CHAT_LS_KEY) : null;
       return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
     } catch {
       return [];
     }
   });
-
-  // 2) 目前 persona（預設 weeked_curator；可被密語覆蓋）
-  const [activePersona, setActivePersona] = useState<string>(() => {
-    try {
-      return localStorage.getItem(KEY_PERSONA) || 'weekend_curator';
-    } catch {
-      return 'weekend_curator';
-    }
-  });
-
-  // 3) 請求中標記
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 4) 永續化：訊息 & persona
+  // 永續化聊天紀錄
   useEffect(() => {
     try {
-      localStorage.setItem(KEY_MSG, JSON.stringify(messages));
-    } catch {}
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(CHAT_LS_KEY, JSON.stringify(messages));
+      }
+    } catch {
+      /* ignore */
+    }
   }, [messages]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY_PERSONA, activePersona);
-    } catch {}
-  }, [activePersona]);
-
-  // 5) 核心：送訊息（會把 personaId 一起帶到後端）
+  // 送出訊息：自動帶上目前 personaId（來自 LocalStorage），並接住後端回傳的 personaUsed 做持久化
   const sendMessage = async (text: string) => {
-    const content = text.trim();
-    if (!content || loading) return;
+    const clean = text.trim();
+    if (!clean) return;
 
-    // 先把使用者訊息推進畫面
-    const userMsg: ChatMessage = { role: 'user', text: content };
+    // 先把使用者訊息放進視窗
+    const userMsg: ChatMessage = { role: 'user', text: clean };
     setMessages((prev) => [...prev, userMsg]);
-
     setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetch(CHAT_API, {
+      // 從 LocalStorage 取目前 personaId；密語命中時，後端會覆蓋並回傳 personaUsed
+      const personaId = (typeof window !== 'undefined' && window.localStorage.getItem(PERSONA_LS_KEY)) || '';
+
+      const payload = {
+        message: clean,
+        personaId,                // 讓後端有「偏好 persona」；若有密語會被覆蓋
+        now: new Date().toISOString(), // 可選：提供當前時間（後端/檢索可用）
+      };
+
+      const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: content,
-          personaId: activePersona, // ★ 帶上目前 persona
-        }),
+        body: JSON.stringify(payload),
       });
 
-      // 後端標準回應：{ reply, persona, personaUsed }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
 
-      // 顯示模型回覆
-      const replyText: string =
-        (typeof data?.reply === 'string' && data.reply) ||
-        '（沒有回覆內容）';
-      const aiMsg: ChatMessage = { role: 'assistant', text: replyText };
+      // 放入 AI 回覆
+      const aiText = (data?.reply ?? '').toString();
+      const aiMsg: ChatMessage = { role: 'assistant', text: aiText };
       setMessages((prev) => [...prev, aiMsg]);
 
-      // ★關鍵：若後端告訴我們本次實際採用的人格（密語觸發或切換）
-      const used: string | undefined =
-        (typeof data?.personaUsed === 'string' && data.personaUsed) ||
-        (typeof data?.persona === 'string' && data.persona);
-
-      if (used && used !== activePersona) {
-        setActivePersona(used); // 同步更新並寫入 localStorage（useEffect 會處理）
+      // ★ 關鍵：後端會回 personaUsed（包含密語觸發的隱藏 persona）
+      const used: string | undefined = data?.personaUsed;
+      if (used && typeof window !== 'undefined') {
+        window.localStorage.setItem(PERSONA_LS_KEY, used);
+        // 廣播事件，讓 ChatContext/PersonaSwitch 等即時同步
+        window.dispatchEvent(new CustomEvent('persona:change', { detail: { id: used } }));
       }
-    } catch (e) {
-      // 簡單錯誤回覆
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', text: '（抱歉，伺服器暫時沒有回應）' },
-      ]);
+    } catch (e: any) {
+      setError('發送失敗，請稍後再試');
+      // 也可以選擇把剛剛 push 的 user 訊息移除；這裡先保留方便除錯
+      // setMessages((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
     }
   };
 
-  // 6) 清空對話（不影響目前 persona）
   const clear = () => {
     setMessages([]);
     try {
-      localStorage.removeItem(KEY_MSG);
-    } catch {}
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(CHAT_LS_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
   };
 
   return {
     messages,
-    loading,
     sendMessage,
+    loading,
+    error,
     clear,
-    activePersona,
-    setActivePersona, // 讓 UI（下拉選單）也能手動切換
   };
 }
