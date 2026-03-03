@@ -27,7 +27,7 @@ urlpatterns = [
     # ★ 把 assistant 掛到 /api/assistant/ 之下
     path("api/assistant/", include("assistant.urls")),
     path('api/register/', RegisterView.as_view(), name='register_user'),
-    path('api/captcha/', include('captcha.urls')),
+    path('api/get-captcha/', include('captcha.urls')),
     path("api/verify-registration/", VerifyRegistrationView.as_view(), name="verify_registration"),
     path('api/me/', UserProfileView.as_view(), name='me'),
 ]

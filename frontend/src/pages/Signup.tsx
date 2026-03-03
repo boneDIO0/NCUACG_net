@@ -22,7 +22,7 @@ export default function Signup() {
       return;
     }
      await axios.post('http://localhost:8000/api/register/', {
-        username:username,
+        name:username,
         useremail:useremail,
         password:password
       }, { withCredentials: true }).then(res => {

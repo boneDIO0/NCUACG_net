@@ -22,7 +22,10 @@ class Credential(models.Model):
     def __str__(self):
         return f"(user_id={self.user.id})"
 
-
+class RevokedToken(models.Model):
+    jti = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
 class VerificationToken(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     token = models.CharField(max_length=64, unique=True)

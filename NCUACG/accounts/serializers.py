@@ -63,15 +63,14 @@ class LoginSerializer(serializers.Serializer):
 
         # 簽發 JWT
         refresh = RefreshToken.for_user(user) 
-        refresh['id'] = int(user.pk)
-        refresh["user_id"] = int(user.pk)  # 加這行
+        refresh["id"] = int(user.pk)
         attrs['user'] = user
         attrs['access'] = str(refresh.access_token)
         attrs['refresh'] = str(refresh)
         return attrs
 
     
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     useremail = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)

@@ -1,1 +1,1 @@
-﻿DELETE from accounts_user;
+﻿delete from accounts_User;

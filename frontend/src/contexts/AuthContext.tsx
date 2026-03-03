@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
+        const res = await axios.get<User>('http://localhost:8000/api/me/', {
           withCredentials: true,
         });
         setUser(res.data);
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (window.confirm('確定要登出嗎？')) {
       try {
         await axios.post(
-          'http://127.0.0.1:8000/api/logout/',
+          'http://localhost:8000/api/logout/',
           {},
           { withCredentials: true }
         );

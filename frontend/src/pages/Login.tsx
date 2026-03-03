@@ -22,7 +22,7 @@ export default function Login() {
   const [captchaInput, setCaptchaInput] = useState(''); // 使用者輸入
   const loadCaptcha = async () => {
     try {
-      const res = await axios.get<CaptchaResponse>("http://127.0.0.1:8000/api/get-captcha/");
+      const res = await axios.get("http://127.0.0.1:8000/api/get-captcha/");
       setCaptcha(res.data);
       setCaptchaInput('');
       console.log(res.data)
@@ -49,24 +49,16 @@ export default function Login() {
         password,
         captcha_key: captcha?.captcha_key,
         captcha_value: captchaInput
-      }
+      },{withCredentials: true}
+       
     );
     setMessage(loginRes.data.message);
-    const accessToken = loginRes.data.access;
-    const refreshToken = loginRes.data.refresh;
-
-    // 存起來，key 要自己決定統一名稱
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    // 成功 → 抓 /api/me/ 更新 Context
-     
-     const token = localStorage.getItem('accessToken');
-     const meRes = await axios.get<User>('http://127.0.0.1:8000/api/me/', {
-      headers: {
-                Authorization: `Bearer ${token}`
-           }
-    });
+   
+     const meRes = await axios.get<User>('http://localhost:8000/api/me/',{
+     withCredentials: true}
+    );
     setUser(meRes.data);
+    navigate('/')
   } catch (err: any) {
     setMessage(err.response?.data?.message || '發生錯誤');
     console.log(err.response?.data?.message)

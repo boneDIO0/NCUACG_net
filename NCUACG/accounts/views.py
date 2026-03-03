@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 import bcrypt
-from accounts.models import User, Credential, VerificationToken
+from accounts.models import User, Credential, VerificationToken ,RevokedToken
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -15,7 +15,7 @@ from captcha.models import CaptchaStore
 from captcha.helpers import captcha_image_url
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken,AccessToken, TokenError
 from rest_framework.permissions import IsAuthenticated
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -29,25 +29,47 @@ from accounts.tokentest import JWTtest
 import jwt
 from django.conf import settings
 from rest_framework_simplejwt.exceptions import InvalidToken  # ←這裡
-from rest_framework.exceptions import AuthenticationFailed    # ←這裡
+from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import AuthenticationFailed
 logger = logging.getLogger(__name__)
 class CustomJWTAuthentication(JWTAuthentication):
+    def authenticate(self, request):
+        # 嘗試從 cookie 取 token
+        access_token = request.COOKIES.get('access_token')
+
+        if not access_token:
+            # 若沒有 cookie，維持預設行為（從 Authorization header）
+            header = self.get_header(request)
+            if header is None:
+                return None
+            raw_token = self.get_raw_token(header)
+        else:
+            raw_token = access_token
+
+        if raw_token is None:
+            return None
+
+        validated_token = self.get_validated_token(raw_token)
+        return self.get_user(validated_token), validated_token
     def get_user(self, validated_token):
-        try:
-            user_id = validated_token['user_id']
-        except KeyError:
-            raise InvalidToken('Token contained no recognizable user identification')
+        # 黑名單檢查
+        jti = validated_token.get("jti")
+        if RevokedToken.objects.filter(jti=jti).exists():
+            raise AuthenticationFailed("Token has been revoked")
+
+        # 支援兩種 key
+        user_id = validated_token.get("user_id") or validated_token.get("id")
+        if not user_id:
+            raise InvalidToken("Token contained no recognizable user identification")
 
         try:
-            user = User.objects.get(id=user_id)
+            return User.objects.get(id=user_id)
         except User.DoesNotExist:
-            raise AuthenticationFailed('User not found', code='user_not_found')
-
-        return user
+            raise AuthenticationFailed("User not found", code="user_not_found")
 class UserProfileView(APIView):
+   
     authentication_classes = [CustomJWTAuthentication]
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         try:
             user = request.user  # 這裡會是 CustomJWTAuthentication 回傳的 User
@@ -93,12 +115,27 @@ class LoginView(generics.GenericAPIView):
             refresh_token = serializer.validated_data["refresh"]
 
             logger.info(f"User '{user.name}' logged in successfully.")
-            
-            return Response({
+            response = Response({
                 "message": "Login success",
-                "access": access_token,
-                "refresh": refresh_token
             }, status=status.HTTP_200_OK)
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,  # 若使用 HTTPS 記得設 True
+                samesite='Lax',  # 或 'None'（跨網域情況）
+                max_age=60 * 5  # 例如 5 分鐘
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7  # 例如 7 天
+            )
+
+            return response
         except Exception as e:
             print(logger.error(traceback.format_exc()))
             return Response({
@@ -108,9 +145,18 @@ class LoginView(generics.GenericAPIView):
 
 class LogoutView(APIView):
     def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                jti = token['jti']
+                RevokedToken.objects.get_or_create(jti=jti)
+            except Exception:
+                pass
         response = Response({'message': '登出成功'})
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
+        cookie_params = {"path": "/"}
+        response.delete_cookie('access_token', **cookie_params)
+        response.delete_cookie('refresh_token', **cookie_params)
         return response
 
 
